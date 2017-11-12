@@ -8,18 +8,17 @@ import (
 
 type UDPServer struct {
 	Conn *net.UDPConn
+	pool *PacketPool
 }
 
 func NewServer(port int) UDPServer {
 
 	server := UDPServer{}
 
-	addr := net.UDPAddr{
-		IP: net.ParseIP("127.0.0.1"),
-		Port: port,
-	}
+	var addr, err = net.ResolveUDPAddr("udp", ":19132")
+	addr.Port = port
 
-	conn, err := net.ListenUDP("udp", &addr)
+	conn, err := net.ListenUDP("udp", addr)
 
 	if err != nil {
 		//todo
@@ -28,18 +27,33 @@ func NewServer(port int) UDPServer {
 	}
 
 	server.Conn = conn
+	server.pool = NewPacketPool()
 
 	return server
 }
 
-func (udp *UDPServer) readBuffer(buffer *[]byte) string {
+func (udp *UDPServer) ReadBuffer() string {
 
-	_, addr, err := udp.Conn.ReadFromUDP(*buffer)
+	var buffer = make([]byte, 1028)
+
+	n, addr, err := udp.Conn.ReadFromUDP(buffer)
 
 	if err != nil {
 		fmt.Printf("An error has occurred: %v", err)
 		os.Exit(1)
 	}
+
+	if n == 0 {
+		return ""
+	}
+
+	var idBuffer = buffer
+	var packetId = int(idBuffer[0])
+
+	var packet = udp.pool.GetPacket(packetId)
+
+	packet.SetBuffer(buffer)
+	packet.Decode()
 
 	return addr.IP.To4().String()
 }

@@ -5,8 +5,8 @@ import (
 )
 
 func Read(buffer *[]byte, offset *int, length int) []byte {
-	bytes := make([]byte, length)
-	if *offset == (len(*buffer)-1) {
+	bytes := make([]byte, 0)
+	if *offset == (len( *buffer) - 1) {
 		fmt.Printf("An error occurred: %v", "no bytes left to Write")
 		panic("Aborting...")
 	}
@@ -15,6 +15,7 @@ func Read(buffer *[]byte, offset *int, length int) []byte {
 			bytes = append(bytes, (*buffer)[*offset])
 			*offset++
 		}
+		*offset++
 		return bytes
 	}
 	bytes = append(bytes, (*buffer)[*offset])
@@ -85,7 +86,6 @@ func ReadShort(buffer *[]byte, offset *int) int16 {
 
 func WriteLittleEndianShort(buffer *[]byte, signed int16) {
 	var i uint
-	len2 := 0
 	for i = 2 * 8; i > 0; i -= 8 {
 		Write(buffer, byte(signed >> i))
 	}
@@ -152,10 +152,10 @@ func ReadLong(buffer *[]byte, offset *int) int64 {
 	v = len2
 	for i = 0; i < uint(len2) * 8; i += 8 {
 		if i == 0 {
-			out = int(bytes[v])
+			out = int(bytes[v - 1])
 			continue
 		}
-		out |= int(bytes[v]) << i
+		out |= int(bytes[v - 1]) << i
 		v--
 	}
 	return int64(out)
@@ -334,7 +334,7 @@ func ReadLittleEndianTriad(buffer *[]byte, offset *int) uint32 {
 	return out
 }
 
-func WriteLittleEndianTriad(buffer *[]byte, uint uint16) {
+func WriteLittleEndianTriad(buffer *[]byte, uint uint32) {
 	Write(buffer, byte(uint >> 16))
 	Write(buffer, byte(uint >> 8 & 0xFF))
 	Write(buffer, byte(uint & 0xFF))
