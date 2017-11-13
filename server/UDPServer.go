@@ -4,24 +4,32 @@ import (
 	"net"
 	"fmt"
 	"os"
+	"strconv"
+	"errors"
+	"goraklib/protocol"
 )
 
 type UDPServer struct {
+	port int
+	address string
 	Conn *net.UDPConn
 	pool *PacketPool
+	packets []protocol.IPacket
 }
 
-func NewServer(port int) UDPServer {
+func NewUDPServer(port int) UDPServer {
 
 	server := UDPServer{}
 
-	var addr, err = net.ResolveUDPAddr("udp", ":19132")
+	server.port = port
+	var addr, err = net.ResolveUDPAddr("udp", ":" + strconv.Itoa(port))
 	addr.Port = port
+
+	server.address = addr.IP.To4().String()
 
 	conn, err := net.ListenUDP("udp", addr)
 
 	if err != nil {
-		//todo
 		fmt.Printf("An error has occurred: %v", err)
 		os.Exit(1)
 	}
@@ -32,9 +40,13 @@ func NewServer(port int) UDPServer {
 	return server
 }
 
-func (udp *UDPServer) ReadBuffer() string {
+func (udp *UDPServer) GetPort() int {
+	return udp.port
+}
 
-	var buffer = make([]byte, 1028)
+func (udp *UDPServer) ReadBuffer() (protocol.IPacket, string, int, error) {
+
+	var buffer = make([]byte, 4096)
 
 	n, addr, err := udp.Conn.ReadFromUDP(buffer)
 
@@ -43,29 +55,36 @@ func (udp *UDPServer) ReadBuffer() string {
 		os.Exit(1)
 	}
 
+	var packet protocol.IPacket
+
 	if n == 0 {
-		return ""
+		return packet, "", 0, errors.New("received null packet")
 	}
+
+	var ip = addr.IP.To4().String()
+	var port = addr.Port
 
 	var idBuffer = buffer
 	var packetId = int(idBuffer[0])
 
-	var packet = udp.pool.GetPacket(packetId)
+	packet = udp.pool.GetPacket(packetId)
+	if packet == nil {
+		fmt.Println("Unknown package with ID:", packetId)
+	}
 
 	packet.SetBuffer(buffer)
-	packet.Decode()
 
-	return addr.IP.To4().String()
+	return packet, ip, port, nil
 }
 
-func (udp *UDPServer) writeBuffer(buffer *[]byte, ip string, port int) {
+func (udp *UDPServer) WriteBuffer(buffer []byte, ip string, port int) {
 
 	addr := net.UDPAddr{
 		IP: net.ParseIP(ip),
 		Port: port,
 	}
 
-	_, err := udp.Conn.WriteToUDP(*buffer, &addr)
+	_, err := udp.Conn.WriteToUDP(buffer, &addr)
 
 	if err != nil {
 		fmt.Printf("An error has occurred: %v", err)

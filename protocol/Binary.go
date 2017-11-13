@@ -465,7 +465,7 @@ func ReadLittleDouble(buffer *[]byte, offset *int) (float64) {
 
 func WriteString(buffer *[]byte, string string) {
 	len2 := len(string)
-	WriteVarInt(buffer, int32(len2))
+	WriteShort(buffer, int16(len2))
 	for i := 0; i < len2; i++ {
 		WriteByte(buffer, byte(string[i]))
 	}

@@ -9,6 +9,14 @@ func NewStream() *BinaryStream {
 	return &BinaryStream{0, make([]byte, 4096)}
 }
 
+func (stream *BinaryStream) SetBuffer(buffer []byte) {
+	stream.buffer = buffer
+}
+
+func (stream *BinaryStream) GetBuffer() []byte {
+	return stream.buffer
+}
+
 func (stream *BinaryStream) Feof() bool {
 	return stream.offset >= len(stream.buffer)
 }
@@ -109,6 +117,14 @@ func (stream *BinaryStream) PutVarLong(v int64) {
 
 func (stream *BinaryStream) GetVarLong() int64 {
 	return ReadVarLong(&stream.buffer, &stream.offset)
+}
+
+func (stream *BinaryStream) PutString(v string) {
+	WriteString(&stream.buffer, v)
+}
+
+func (stream *BinaryStream) GetString() string {
+	return ReadString(&stream.buffer, &stream.offset)
 }
 
 func (stream *BinaryStream) PutLittleShort(v int16) {

@@ -7,6 +7,7 @@ type Packet struct {
 
 type IPacket interface {
 	SetBuffer([]byte)
+	GetBuffer() []byte
 	GetId() int
 	Encode()
 	Decode()
@@ -21,11 +22,11 @@ func (packet *Packet) GetId() int {
 }
 
 func (packet *Packet) DecodeStep() {
-	var offset = 0
-	packet.offset = offset
+	packet.offset = 1
 }
 
 func (packet *Packet) EncodeId() {
+	packet.buffer = []byte{}
 	var newBuffer = append(packet.buffer, byte(packet.packetId))
 	packet.buffer = newBuffer
 }
