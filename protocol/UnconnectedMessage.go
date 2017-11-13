@@ -14,7 +14,7 @@ func NewUnconnectedMessage(packet *Packet) *UnconnectedMessage {
 }
 
 func (message *UnconnectedMessage) WriteMagic() {
-	message.WriteBytes(magic)
+	message.PutBytes(magic)
 }
 
 func (message *UnconnectedMessage) ReadMagic() {

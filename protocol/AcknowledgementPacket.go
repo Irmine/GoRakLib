@@ -34,13 +34,13 @@ func (packet AcknowledgementPacket) Encode() {
 func (packet AcknowledgementPacket) Decode() {
 	packet.DecodeStep()
 	packet.packets = []uint32{}
-	var packetCount = packet.ReadShort()
+	var packetCount = packet.GetShort()
 	var count = 0
 
 	for i := int16(0); i < packetCount && !packet.Feof() && count < 4096; i++ {
-		if packet.ReadByte() == 0 {
-			var start = packet.ReadLittleEndianTriad()
-			var end = packet.ReadLittleEndianTriad()
+		if packet.GetByte() == 0 {
+			var start = packet.GetLittleTriad()
+			var end = packet.GetLittleTriad()
 
 			if (end - start) > 512 {
 				end = start + 512
@@ -52,7 +52,7 @@ func (packet AcknowledgementPacket) Decode() {
 			}
 
 		} else {
-			packet.packets = append(packet.packets, packet.ReadLittleEndianTriad())
+			packet.packets = append(packet.packets, packet.GetLittleTriad())
 			count++
 		}
 	}

@@ -22,7 +22,7 @@ func (ping UnconnectedPing) Encode() {
 
 func (ping UnconnectedPing) Decode() {
 	ping.DecodeStep()
-	ping.pingId = ping.ReadLong()
+	ping.pingId = ping.GetLong()
 	ping.ReadMagic()
 	if ping.HasValidMagic() {
 		fmt.Println("Received a valid UnconnectedPing")
