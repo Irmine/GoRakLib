@@ -3,11 +3,12 @@ package protocol
 import (
 	"strings"
 	"strconv"
+	"goraklib/binary"
 )
 
 type Packet struct {
 	packetId int
-	*BinaryStream
+	*binary.BinaryStream
 }
 
 type IPacket interface {
@@ -19,7 +20,7 @@ type IPacket interface {
 }
 
 func NewPacket(id int) *Packet {
-	return &Packet{id, NewStream()}
+	return &Packet{id, binary.NewStream()}
 }
 
 func (packet *Packet) GetId() int {
@@ -27,13 +28,13 @@ func (packet *Packet) GetId() int {
 }
 
 func (packet *Packet) DecodeStep() {
-	packet.offset = 1
+	packet.Offset = 1
 }
 
 func (packet *Packet) EncodeId() {
-	packet.buffer = []byte{}
-	var newBuffer = append(packet.buffer, byte(packet.packetId))
-	packet.buffer = newBuffer
+	packet.Buffer = []byte{}
+	var newBuffer = append(packet.Buffer, byte(packet.packetId))
+	packet.Buffer = newBuffer
 }
 
 func (packet *Packet) ResetBase() {
@@ -69,9 +70,9 @@ func (packet *Packet) PutAddress(address string, port uint16, ipVersion byte) {
 	default:
 	case 4:
 		var stringArr = strings.Split(address, ".")
-		for _, string := range stringArr {
-			var str, _ = strconv.Atoi(string)
-			packet.PutByte(byte(str))
+		for _, str := range stringArr {
+			var digit, _ = strconv.Atoi(str)
+			packet.PutByte(byte(digit))
 		}
 		packet.PutUnsignedShort(port)
 	case 6:

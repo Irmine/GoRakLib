@@ -1,4 +1,4 @@
-package protocol
+package binary
 
 import (
 	"fmt"
@@ -7,7 +7,7 @@ import (
 
 func Read(buffer *[]byte, offset *int, length int) ([]byte) {
 	bytes := make([]byte, 0)
-	if *offset >= len( *buffer) {
+	if *offset >= len(*buffer) - 1 {
 		fmt.Printf("An error occurred: %v", "no bytes left to read")
 		panic("Aborting...")
 	}

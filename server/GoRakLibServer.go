@@ -8,6 +8,7 @@ type GoRakLibServer struct {
 	serverName string
 	serverId int64
 	port int
+
 	udp *UDPServer
 	sessionManager *SessionManager
 }

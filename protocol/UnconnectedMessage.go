@@ -1,6 +1,9 @@
 package protocol
 
-import "bytes"
+import (
+	"bytes"
+	"goraklib/binary"
+)
 
 var magic = []byte{0, 255, 255, 0, 254, 254, 254, 254, 253, 253, 253, 253, 18, 52, 86, 120}
 
@@ -18,7 +21,7 @@ func (message *UnconnectedMessage) WriteMagic() {
 }
 
 func (message *UnconnectedMessage) ReadMagic() {
-	message.magic = Read(&message.buffer, &message.offset, 16)
+	message.magic = binary.Read(&message.Buffer, &message.Offset, 16)
 }
 
 func (message *UnconnectedMessage) HasValidMagic() bool {
