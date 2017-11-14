@@ -45,14 +45,34 @@ func (manager *SessionManager) Tick() {
 func (manager *SessionManager) HandlePacket(packetInterface protocol.IPacket, session *Session) {
 	switch packet := packetInterface.(type) {
 	case *protocol.UnconnectedPing:
-		var unconnectedPong = protocol.NewUnconnectedPong()
+		var pong = protocol.NewUnconnectedPong()
 
-		unconnectedPong.PingId = packet.PingId
-		unconnectedPong.ServerId = manager.server.GetServerId()
-		unconnectedPong.ServerName = manager.server.GetName()
+		pong.PingId = packet.PingId
+		pong.ServerId = manager.server.GetServerId()
+		pong.ServerData = manager.server.GetName()
 
-		unconnectedPong.Encode()
-		manager.SendPacket(unconnectedPong, session.address, session.port)
+		pong.Encode()
+		manager.SendPacket(pong, session.address, session.port)
+
+	case *protocol.OpenConnectionRequest1:
+		var response = protocol.NewOpenConnectionResponse1()
+
+		response.ServerId = manager.server.GetServerId()
+		response.MtuSize = packet.MtuSize
+
+		response.Encode()
+		manager.SendPacket(response, session.address, session.port)
+	case *protocol.OpenConnectionRequest2:
+		var response = protocol.NewOpenConnectionResponse2()
+
+		response.ClientPort = uint16(session.port)
+		response.ClientAddress = session.address
+		response.MtuSize = packet.MtuSize
+		response.ServerId = manager.server.GetServerId()
+
+		response.Encode()
+		manager.SendPacket(response, session.address, session.port)
+		session.Open()
 	}
 }
 

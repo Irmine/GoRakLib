@@ -10,12 +10,12 @@ type Session struct {
 	address string
 	port int
 	opened bool
-	packets []protocol.IPacket
+	packets chan protocol.IPacket
 }
 
 func NewSession(address string, port int) *Session {
 	fmt.Println("Session created for ip: " + address + ":" + strconv.Itoa(port))
-	return &Session{address: address, port: port, opened: false}
+	return &Session{address: address, port: port, opened: false, packets: make(chan protocol.IPacket, 20)}
 }
 
 func (session *Session) Open() {
@@ -25,7 +25,7 @@ func (session *Session) Open() {
 func (session *Session) Forward(packet protocol.IPacket) {
 	packet.Decode()
 
-	session.packets = append(session.packets, packet)
+	session.packets <- packet
 }
 
 func (session *Session) IsStackEmpty() bool {
@@ -33,8 +33,6 @@ func (session *Session) IsStackEmpty() bool {
 }
 
 func (session *Session) FetchFromStack() protocol.IPacket {
-	var packet = session.packets[0]
-	session.packets = session.packets[1:]
-	return packet
+	return <- session.packets
 }
 

@@ -9,7 +9,7 @@ type UnconnectedPong struct {
 	*UnconnectedMessage
 	PingId int64
 	ServerId int64
-	ServerName string
+	ServerData string
 }
 
 func NewUnconnectedPong() *UnconnectedPong {

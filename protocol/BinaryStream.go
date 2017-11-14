@@ -21,6 +21,10 @@ func (stream *BinaryStream) Feof() bool {
 	return stream.offset >= len(stream.buffer)
 }
 
+func (stream *BinaryStream) Get(length int) []byte {
+	return Read(&stream.buffer, &stream.offset, length)
+}
+
 //big
 
 func (stream *BinaryStream) PutBool(v bool) {

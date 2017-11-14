@@ -14,6 +14,8 @@ func NewPacketPool() *PacketPool {
 	pool.packets = make(map[int]protocol.IPacket)
 
 	pool.RegisterPacket(identifiers.UnconnectedPing, protocol.NewUnconnectedPing())
+	pool.RegisterPacket(identifiers.OpenConnectionRequest1, protocol.NewOpenConnectionRequest1())
+	pool.RegisterPacket(identifiers.OpenConnectionRequest2, protocol.NewOpenConnectionRequest2())
 	return &pool
 }
 
