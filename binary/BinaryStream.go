@@ -123,6 +123,22 @@ func (stream *BinaryStream) GetVarLong() int64 {
 	return ReadVarLong(&stream.Buffer, &stream.Offset)
 }
 
+func (stream *BinaryStream) PutUnsignedVarInt(v uint32) {
+	WriteUnsignedVarInt(&stream.Buffer, v)
+}
+
+func (stream *BinaryStream) GetUnsignedVarInt() uint32 {
+	return ReadUnsignedVarInt(&stream.Buffer, &stream.Offset)
+}
+
+func (stream *BinaryStream) PutUnsignedVarLong(v uint64) {
+	WriteUnsignedVarLong(&stream.Buffer, v)
+}
+
+func (stream *BinaryStream) GetUnsignedVarLong() uint64 {
+	return ReadUnsignedVarLong(&stream.Buffer, &stream.Offset)
+}
+
 func (stream *BinaryStream) PutString(v string) {
 	WriteString(&stream.Buffer, v)
 }
