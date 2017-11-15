@@ -10,20 +10,23 @@ import (
 )
 
 type UDPServer struct {
-	port int
+	port uint16
 	address string
 	Conn *net.UDPConn
 	pool *PacketPool
 	packets []protocol.IPacket
 }
 
-func NewUDPServer(port int) UDPServer {
-
+func NewUDPServer(address string, port uint16) UDPServer {
 	server := UDPServer{}
 
 	server.port = port
-	var addr, err = net.ResolveUDPAddr("udp", ":" + strconv.Itoa(port))
-	addr.Port = port
+
+	if address == "127.0.0.1" {
+		address = ""
+	}
+	var addr, err = net.ResolveUDPAddr("udp", address + ":" + strconv.Itoa(int(port)))
+	addr.Port = int(port)
 
 	server.address = addr.IP.To4().String()
 
@@ -40,12 +43,11 @@ func NewUDPServer(port int) UDPServer {
 	return server
 }
 
-func (udp *UDPServer) GetPort() int {
+func (udp *UDPServer) GetPort() uint16 {
 	return udp.port
 }
 
-func (udp *UDPServer) ReadBuffer() (protocol.IPacket, string, int, error) {
-
+func (udp *UDPServer) ReadBuffer() (protocol.IPacket, string, uint16, error) {
 	var buffer = make([]byte, 4096)
 
 	n, addr, err := udp.Conn.ReadFromUDP(buffer)
@@ -74,14 +76,14 @@ func (udp *UDPServer) ReadBuffer() (protocol.IPacket, string, int, error) {
 
 	packet.SetBuffer(buffer)
 
-	return packet, ip, port, nil
+	return packet, ip, uint16(port), nil
 }
 
-func (udp *UDPServer) WriteBuffer(buffer []byte, ip string, port int) {
+func (udp *UDPServer) WriteBuffer(buffer []byte, ip string, port uint16) {
 
 	addr := net.UDPAddr{
 		IP: net.ParseIP(ip),
-		Port: port,
+		Port: int(port),
 	}
 
 	_, err := udp.Conn.WriteToUDP(buffer, &addr)

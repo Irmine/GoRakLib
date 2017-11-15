@@ -8,27 +8,24 @@ import (
 
 type Session struct {
 	address string
-	port int
+	port uint16
 	opened bool
 	connected bool
 	packets chan protocol.IPacket
 }
 
-func NewSession(address string, port int) *Session {
-	fmt.Println("Session created for ip: " + address + ":" + strconv.Itoa(port))
-	return &Session{address: address, port: port, opened: false, packets: make(chan protocol.IPacket, 20)}
-}
-
-func (session *Session) GetAddress() string {
-	return session.address
-}
-
-func (session *Session) GetPort() int {
-	return session.port
+func NewSession(address string, port uint16) *Session {
+	fmt.Println("Session created for ip: " + address + ":" + strconv.Itoa(int(port)))
+	return &Session{address: address, port: port, opened: false, connected: false, packets: make(chan protocol.IPacket, 20)}
 }
 
 func (session *Session) Open() {
 	session.opened = true
+}
+
+func (session *Session) Close() {
+	session.opened = false
+	session.SetConnected(false)
 }
 
 func (session *Session) IsOpened() bool {
@@ -57,3 +54,10 @@ func (session *Session) FetchFromStack() protocol.IPacket {
 	return <- session.packets
 }
 
+func (session *Session) GetPort() uint16 {
+	return session.port
+}
+
+func (session *Session) GetAddress() string {
+	return session.address
+}

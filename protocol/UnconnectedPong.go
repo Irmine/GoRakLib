@@ -9,13 +9,19 @@ type UnconnectedPong struct {
 	*UnconnectedMessage
 	PingId int64
 	ServerId int64
-	ServerData string
+	ServerName string
+	ServerProtocol uint
+	ServerVersion string
+	OnlinePlayers uint
+	MaximumPlayers uint
+	Motd string
+	DefaultGameMode string
 }
 
 func NewUnconnectedPong() *UnconnectedPong {
 	return &UnconnectedPong{NewUnconnectedMessage(NewPacket(
 		identifiers.UnconnectedPong,
-	)), 0, 0, ""}
+	)), 0, 0, "", 0, "", 0, 20, "", ""}
 }
 
 func (pong *UnconnectedPong) Encode() {
@@ -23,7 +29,17 @@ func (pong *UnconnectedPong) Encode() {
 	pong.PutLong(pong.PingId)
 	pong.PutLong(pong.ServerId)
 	pong.WriteMagic()
-	pong.PutString("MCPE;GoMineServer;140;1.2.6.2;5;100;" + strconv.Itoa(int(pong.ServerId)) + ";GoMine;Creative;")
+	pong.PutString(
+		"MCPE;" +
+		pong.ServerName + ";" +
+		strconv.Itoa(int(pong.ServerProtocol)) + ";" +
+		pong.ServerVersion + ";" +
+		strconv.Itoa(int(pong.OnlinePlayers)) + ";" +
+		strconv.Itoa(int(pong.MaximumPlayers)) + ";" +
+		strconv.Itoa(int(pong.ServerId)) + ";" +
+		pong.Motd + ";" +
+		pong.DefaultGameMode + ";",
+	)
 }
 
 func (pong *UnconnectedPong) Decode() {
