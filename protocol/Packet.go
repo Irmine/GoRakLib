@@ -89,7 +89,3 @@ func (packet *Packet) PutAddress(address string, port uint16, ipVersion byte) {
 		packet.PutInt(0)
 	}
 }
-
-func (packet *Packet) GetEncapsulatedPacket() EncapsulatedPacket {
-	return EncapsulatedPacket{}
-}

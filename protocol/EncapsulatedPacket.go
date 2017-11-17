@@ -5,14 +5,14 @@ import (
 )
 
 const (
-	ReliabilityUnreliable = 0
-	ReliabilityUnreliableSequenced = 1
-	ReliabilityReliable = 2
-	ReliabilityReliableOrdered = 3
-	ReliabilityReliableSequenced = 4
-	ReliabilityUnreliableWithAck = 5
-	ReliabilityReliableWithAck = 6
-	ReliabilityReliableOrderedWithAck = 7
+	ReliabilityUnreliable = iota
+	ReliabilityUnreliableSequenced
+	ReliabilityReliable
+	ReliabilityReliableOrdered
+	ReliabilityReliableSequenced
+	ReliabilityUnreliableWithAck
+	ReliabilityReliableWithAck
+	ReliabilityReliableOrderedWithAck
 )
 
 type EncapsulatedPacket struct {
@@ -27,13 +27,10 @@ type EncapsulatedPacket struct {
 	SplitId int16
 	SplitCount uint
 	SplitIndex uint
-
-	IdentifierAck int
-	NeedsAck bool
 }
 
 func NewEncapsulatedPacket(stream *Datagram) (EncapsulatedPacket, error) {
-	var packet = EncapsulatedPacket{NewPacket(0), 0, false, 0, 0, 0, 0, 0, 0, 0, 0, false}
+	var packet = EncapsulatedPacket{NewPacket(0), 0, false, 0, 0, 0, 0, 0, 0, 0}
 
 	var flags = stream.GetByte()
 	packet.Reliability = (flags & 224) >> 5
