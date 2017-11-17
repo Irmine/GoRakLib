@@ -2,7 +2,7 @@ package server
 
 import "goraklib/protocol"
 
-func (manager *SessionManager) HandlePacket(packetInterface protocol.IPacket, session *Session) {
+func (manager *SessionManager) HandleUnconnectedMessage(packetInterface protocol.IPacket, session *Session) {
 	switch packet := packetInterface.(type) {
 	case *protocol.UnconnectedPing:
 		var pong = protocol.NewUnconnectedPong()
@@ -26,6 +26,11 @@ func (manager *SessionManager) HandlePacket(packetInterface protocol.IPacket, se
 		response.ServerId = manager.server.GetServerId()
 		response.MtuSize = packet.MtuSize
 
+		response.Security = 0
+		if manager.server.IsSecure() {
+			response.Security = 1
+		}
+
 		response.Encode()
 		manager.SendPacket(response, session.address, session.port)
 
@@ -36,6 +41,11 @@ func (manager *SessionManager) HandlePacket(packetInterface protocol.IPacket, se
 		response.ClientAddress = session.address
 		response.MtuSize = packet.MtuSize
 		response.ServerId = manager.server.GetServerId()
+
+		response.Security = 0
+		if manager.server.IsSecure() {
+			response.Security = 1
+		}
 
 		response.Encode()
 		manager.SendPacket(response, session.address, session.port)

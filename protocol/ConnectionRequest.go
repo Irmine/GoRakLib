@@ -1,0 +1,26 @@
+package protocol
+
+import "goraklib/protocol/identifiers"
+
+type ConnectionRequest struct {
+	*Packet
+	ClientId uint64
+	PingSendTime uint64
+	Security byte
+}
+
+func NewConnectionRequest() *ConnectionRequest {
+	return &ConnectionRequest{NewPacket(
+		identifiers.ConnectionRequest,
+	), 0, 0, 0}
+}
+
+func (request *ConnectionRequest) Encode() {
+
+}
+
+func (request *ConnectionRequest) Decode() {
+	request.DecodeStep()
+	request.ClientId = request.GetUnsignedLong()
+	request.PingSendTime = request.GetUnsignedLong()
+}

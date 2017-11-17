@@ -70,9 +70,6 @@ func (udp *UDPServer) ReadBuffer() (protocol.IPacket, string, uint16, error) {
 	var packetId = int(idBuffer[0])
 
 	packet = udp.pool.GetPacket(packetId)
-	if packet == nil {
-		fmt.Println("Unknown package with ID:", packetId)
-	}
 
 	packet.SetBuffer(buffer)
 

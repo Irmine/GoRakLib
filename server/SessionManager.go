@@ -37,7 +37,14 @@ func (manager *SessionManager) GetSession(address string, port uint16) (*Session
 func (manager *SessionManager) Tick() {
 	for _, session := range manager.sessions {
 		for !session.IsStackEmpty() {
-			manager.HandlePacket(session.FetchFromStack(), session)
+			packet := session.FetchFromStack()
+			if packet.HasMagic() {
+				manager.HandleUnconnectedMessage(packet, session)
+			} else {
+				if packet, ok := packet.(*protocol.Datagram); ok {
+					manager.HandleDatagram(packet, session)
+				}
+			}
 		}
 	}
 }

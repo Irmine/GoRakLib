@@ -16,6 +16,7 @@ type GoRakLibServer struct {
 	defaultGameMode string
 	minecraftProtocol uint
 	minecraftVersion string
+	security bool
 }
 
 func NewGoRakLibServer(serverName string, address string, port uint16) *GoRakLibServer {
@@ -116,6 +117,14 @@ func (server *GoRakLibServer) GetMinecraftVersion() string {
 
 func (server *GoRakLibServer) SetMinecraftVersion(version string) {
 	server.minecraftVersion = version
+}
+
+func (server *GoRakLibServer) SetSecurity(value bool) {
+	server.security = value
+}
+
+func (server *GoRakLibServer) IsSecure() bool {
+	return server.security
 }
 
 func (server *GoRakLibServer) Tick() {

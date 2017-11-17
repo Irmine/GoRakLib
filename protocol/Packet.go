@@ -17,6 +17,7 @@ type IPacket interface {
 	GetId() int
 	Encode()
 	Decode()
+	HasMagic() bool
 }
 
 func NewPacket(id int) *Packet {
@@ -25,6 +26,11 @@ func NewPacket(id int) *Packet {
 
 func (packet *Packet) GetId() int {
 	return packet.packetId
+}
+
+func (packet *Packet) HasMagic() bool {
+	var magicString = string(magic)
+	return strings.Contains(string(packet.Buffer), magicString)
 }
 
 func (packet *Packet) DecodeStep() {
@@ -82,4 +88,8 @@ func (packet *Packet) PutAddress(address string, port uint16, ipVersion byte) {
 		packet.PutBytes([]byte(address))
 		packet.PutInt(0)
 	}
+}
+
+func (packet *Packet) GetEncapsulatedPacket() EncapsulatedPacket {
+	return EncapsulatedPacket{}
 }

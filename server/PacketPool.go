@@ -24,5 +24,9 @@ func (pool *PacketPool) RegisterPacket(id int, packet protocol.IPacket) {
 }
 
 func (pool *PacketPool) GetPacket(id int) protocol.IPacket {
-	return pool.packets[id]
+	var packet, ok = pool.packets[id]
+	if !ok {
+		return protocol.NewDatagram()
+	}
+	return packet
 }

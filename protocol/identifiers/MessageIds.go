@@ -9,4 +9,6 @@ const (
 
 	OpenConnectionRequest2 = 0x07
 	OpenConnectionResponse2 = 0x08
+
+	ConnectionRequest = 0x09
 )
