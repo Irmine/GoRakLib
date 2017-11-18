@@ -42,6 +42,8 @@ func (manager *SessionManager) HandleUnconnectedMessage(packetInterface protocol
 		response.MtuSize = packet.MtuSize
 		response.ServerId = manager.server.GetServerId()
 
+		session.mtuSize = response.MtuSize
+
 		response.Security = 0
 		if manager.server.IsSecure() {
 			response.Security = 1

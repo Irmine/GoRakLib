@@ -27,7 +27,25 @@ func (datagram *Datagram) GetPackets() *[]*EncapsulatedPacket {
 }
 
 func (datagram *Datagram) Encode() {
+	datagram.Buffer = []byte{}
+	var flags = 0x80
+	if datagram.PacketPair {
+		flags |= BitFlagPacketPair
+	}
+	if datagram.ContinuousSend {
+		flags |= BitFlagContinuousSend
+	}
+	if datagram.NeedsBAndAs {
+		flags |= BitFlagNeedsBAndAs
+	}
 
+	datagram.PutByte(byte(flags))
+	datagram.PutTriad(datagram.SequenceNumber)
+
+	for _, packet := range *datagram.GetPackets() {
+		packet.Encode()
+		datagram.PutBytes(packet.Buffer)
+	}
 }
 
 func (datagram *Datagram) Decode() {
@@ -39,10 +57,16 @@ func (datagram *Datagram) Decode() {
 	datagram.SequenceNumber = datagram.GetLittleTriad()
 
 	for !datagram.Feof() {
-		packet, err := NewEncapsulatedPacket(datagram)
+		packet := NewEncapsulatedPacket()
+		packet, err := packet.GetFromBinary(datagram)
 		if err == nil {
 			var packets = append(*datagram.packets, &packet)
 			datagram.packets = &packets
 		}
 	}
+}
+
+func (datagram *Datagram) AddPacket(packet *EncapsulatedPacket) {
+	var packets = append(*datagram.packets, packet)
+	datagram.packets = &packets
 }

@@ -11,4 +11,7 @@ const (
 	OpenConnectionResponse2 = 0x08
 
 	ConnectionRequest = 0x09
+	ConnectionAccept = 0x10
+
+	NewIncomingConnection = 0x13
 )

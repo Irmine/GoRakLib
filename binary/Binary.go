@@ -131,7 +131,7 @@ func WriteInt(buffer *[]byte, int int32) {
 	var i uint
 	var v uint
 	len2 := uint(4)
-	v = uint(len2 * 8)-8
+	v = uint(len2 * 8) - 8
 	for i = 0; i < len2 * 8; i += 8 {
 		Write(buffer, byte(int >> v))
 		v -= 8

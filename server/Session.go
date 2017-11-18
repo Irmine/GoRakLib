@@ -11,12 +11,16 @@ type Session struct {
 	port uint16
 	opened bool
 	connected bool
+	currentSequenceNumber int
+	mtuSize int16
 	packets chan protocol.IPacket
+	sentPackets chan protocol.IPacket
+	clientId uint64
 }
 
 func NewSession(address string, port uint16) *Session {
 	fmt.Println("Session created for ip: " + address + ":" + strconv.Itoa(int(port)))
-	return &Session{address: address, port: port, opened: false, connected: false, packets: make(chan protocol.IPacket, 20)}
+	return &Session{address: address, port: port, opened: false, connected: false, packets: make(chan protocol.IPacket, 20), currentSequenceNumber: 0}
 }
 
 func (session *Session) Open() {
@@ -60,4 +64,12 @@ func (session *Session) GetPort() uint16 {
 
 func (session *Session) GetAddress() string {
 	return session.address
+}
+
+func (session *Session) GetMtuSize() int16 {
+	return session.mtuSize
+}
+
+func (session *Session) GetClientId() uint64 {
+	return session.clientId
 }
