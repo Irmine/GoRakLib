@@ -1,6 +1,8 @@
 package protocol
 
-import "goraklib/protocol/identifiers"
+import (
+	"goraklib/protocol/identifiers"
+)
 
 type OpenConnectionResponse2 struct {
 	*UnconnectedMessage

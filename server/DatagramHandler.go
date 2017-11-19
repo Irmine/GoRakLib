@@ -4,7 +4,6 @@ import (
 	"goraklib/protocol"
 	"goraklib/protocol/identifiers"
 	"fmt"
-	"strconv"
 )
 
 func (manager *SessionManager) HandleDatagram(datagram *protocol.Datagram, session *Session) {
@@ -44,17 +43,16 @@ func (manager *SessionManager) HandleEncapsulated(packet *protocol.EncapsulatedP
 		manager.SendPacket(datagram, session.GetAddress(), session.GetPort())
 
 	case identifiers.NewIncomingConnection:
-		if session.IsConnected() {
-			return
-		}
 		var connection = protocol.NewNewIncomingConnection()
 		connection.Buffer = packet.Buffer
 		connection.Decode()
 
 		session.SetConnected(true)
-		fmt.Println("Session ", session.GetAddress() + ":" + strconv.Itoa(int(session.GetPort())), "connected.")
+
+	case 0xFE:
+		manager.AddProcessedEncapsulatedPacket(*packet)
 
 	default:
-		fmt.Println("Unhandled encapsulated packet with ID:", packet.Buffer[0])
+		fmt.Println("Unknown encapsulated packet:", packet.Buffer[0])
 	}
 }

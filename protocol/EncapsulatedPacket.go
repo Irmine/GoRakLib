@@ -2,6 +2,7 @@ package protocol
 
 import (
 	"errors"
+	"fmt"
 )
 
 const (
@@ -58,6 +59,7 @@ func (packet *EncapsulatedPacket) GetFromBinary(stream *Datagram) (EncapsulatedP
 	}
 
 	if packet.HasSplit {
+		fmt.Println("Packet has split.")
 		packet.SplitCount = uint(stream.GetInt())
 		packet.SplitId = stream.GetShort()
 		packet.SplitIndex = uint(stream.GetInt())

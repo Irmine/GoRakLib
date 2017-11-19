@@ -9,10 +9,12 @@ import (
 type SessionManager struct {
 	server *GoRakLibServer
 	sessions map[string]*Session
+
+	packetBatches chan protocol.EncapsulatedPacket
 }
 
 func NewSessionManager(server *GoRakLibServer) *SessionManager {
-	return &SessionManager{server, make(map[string]*Session)}
+	return &SessionManager{server, make(map[string]*Session), make(chan protocol.EncapsulatedPacket, 512)}
 }
 
 func (manager *SessionManager) CreateSession(address string, port uint16) {
@@ -34,15 +36,27 @@ func (manager *SessionManager) GetSession(address string, port uint16) (*Session
 	return session, nil
 }
 
+func (manager *SessionManager) AddProcessedEncapsulatedPacket(packet protocol.EncapsulatedPacket) {
+	manager.packetBatches <- packet
+}
+
+func (manager *SessionManager) GetReadyEncapsulatedPackets() []protocol.EncapsulatedPacket {
+	var packets = []protocol.EncapsulatedPacket{}
+	for len(manager.packetBatches) != 0 {
+		packets = append(packets, <-manager.packetBatches)
+	}
+	return packets
+}
+
 func (manager *SessionManager) Tick() {
 	for _, session := range manager.sessions {
 		for !session.IsStackEmpty() {
 			packet := session.FetchFromStack()
 			if packet.HasMagic() {
-				manager.HandleUnconnectedMessage(packet, session)
+				go manager.HandleUnconnectedMessage(packet, session)
 			} else {
 				if packet, ok := packet.(*protocol.Datagram); ok {
-					manager.HandleDatagram(packet, session)
+					go manager.HandleDatagram(packet, session)
 				}
 			}
 		}

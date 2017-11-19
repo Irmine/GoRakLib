@@ -48,7 +48,7 @@ func (udp *UDPServer) GetPort() uint16 {
 }
 
 func (udp *UDPServer) ReadBuffer() (protocol.IPacket, string, uint16, error) {
-	var buffer = make([]byte, 4096)
+	var buffer = make([]byte, 8192)
 
 	n, addr, err := udp.Conn.ReadFromUDP(buffer)
 

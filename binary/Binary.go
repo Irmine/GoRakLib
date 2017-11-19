@@ -552,18 +552,16 @@ func WriteUnsignedVarInt(buffer *[]byte, int uint32) {
 func ReadUnsignedVarInt(buffer *[]byte, offset *int) (uint32) {
 	var v uint
 	var i uint
-	var out int
-	bytes := Read(buffer, offset, 5)
-	len2 := uint(len(bytes))
+	var out int = 0
 	v = 0
-	for i = 0; i < len2; i++ {
-		if i == 0 {
-			out = int(bytes[i] & 0x7f) << v
-			v += 8
-			continue
+	for i = 0; i < 4; i++ {
+		byte := ReadByte(buffer, offset)
+		out |= int(byte & 0x7f) << v
+
+		if byte & 0x80 == 0 {
+			return uint32(out)
 		}
-		out |= int(bytes[i] & 0x7f) << v
-		v += 8
+		v += 7
 	}
 
 	return uint32(out)
