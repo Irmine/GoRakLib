@@ -66,6 +66,10 @@ func (datagram *Datagram) Decode() {
 	}
 }
 
+func (datagram *Datagram) GetLength() int {
+	return 0
+}
+
 func (datagram *Datagram) AddPacket(packet *EncapsulatedPacket) {
 	var packets = append(*datagram.packets, packet)
 	datagram.packets = &packets

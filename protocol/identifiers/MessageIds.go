@@ -1,6 +1,9 @@
 package identifiers
 
 const (
+	ConnectedPing = 0x00
+	ConnectedPong = 0x03
+
 	UnconnectedPing = 0x01
 	UnconnectedPong = 0x1c
 

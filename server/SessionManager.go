@@ -11,10 +11,11 @@ type SessionManager struct {
 	sessions map[string]*Session
 
 	packetBatches chan protocol.EncapsulatedPacket
+	splits map[int]map[int]*protocol.EncapsulatedPacket
 }
 
 func NewSessionManager(server *GoRakLibServer) *SessionManager {
-	return &SessionManager{server, make(map[string]*Session), make(chan protocol.EncapsulatedPacket, 512)}
+	return &SessionManager{server, make(map[string]*Session), make(chan protocol.EncapsulatedPacket, 512), make(map[int]map[int]*protocol.EncapsulatedPacket)}
 }
 
 func (manager *SessionManager) CreateSession(address string, port uint16) {

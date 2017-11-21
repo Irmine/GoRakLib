@@ -14,13 +14,14 @@ type Session struct {
 	currentSequenceNumber int
 	mtuSize int16
 	packets chan protocol.IPacket
-	sentPackets chan protocol.IPacket
+
+	sendDatagram chan protocol.Datagram
 	clientId uint64
 }
 
 func NewSession(address string, port uint16) *Session {
 	fmt.Println("Session created for ip: " + address + ":" + strconv.Itoa(int(port)))
-	return &Session{address: address, port: port, opened: false, connected: false, packets: make(chan protocol.IPacket, 20), currentSequenceNumber: 0}
+	return &Session{address: address, port: port, opened: false, connected: false, packets: make(chan protocol.IPacket, 20), currentSequenceNumber: 0, sendDatagram: make(chan protocol.Datagram, 3)}
 }
 
 func (session *Session) Open() {

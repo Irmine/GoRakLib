@@ -13,6 +13,10 @@ func (manager *SessionManager) HandleDatagram(datagram *protocol.Datagram, sessi
 }
 
 func (manager *SessionManager) HandleEncapsulated(packet *protocol.EncapsulatedPacket, session *Session) {
+	if packet.HasSplit {
+		manager.HandleSplitEncapsulated(packet, session)
+		return
+	}
 	switch packet.Buffer[0] {
 	case identifiers.ConnectionRequest:
 		var request = protocol.NewConnectionRequest()
@@ -54,5 +58,20 @@ func (manager *SessionManager) HandleEncapsulated(packet *protocol.EncapsulatedP
 
 	default:
 		fmt.Println("Unknown encapsulated packet:", packet.Buffer[0])
+	}
+}
+
+func (manager *SessionManager) HandleSplitEncapsulated(packet *protocol.EncapsulatedPacket, session *Session) {
+	var id = int(packet.SplitId)
+	manager.splits[id][int(packet.SplitIndex)] = packet
+
+	if len(manager.splits[id]) == int(packet.SplitCount) {
+		var newPacket = protocol.NewEncapsulatedPacket()
+		for _, pk := range manager.splits[id] {
+			newPacket.PutBytes(pk.GetBuffer())
+		}
+		manager.HandleEncapsulated(&newPacket, session)
+
+		delete(manager.splits, id)
 	}
 }
