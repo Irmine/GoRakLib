@@ -14,6 +14,7 @@ type Session struct {
 	currentSequenceNumber int
 	mtuSize int16
 	packets chan protocol.IPacket
+	packetBatches chan protocol.EncapsulatedPacket
 
 	sendDatagram chan protocol.Datagram
 	clientId uint64
@@ -21,7 +22,7 @@ type Session struct {
 
 func NewSession(address string, port uint16) *Session {
 	fmt.Println("Session created for ip: " + address + ":" + strconv.Itoa(int(port)))
-	return &Session{address: address, port: port, opened: false, connected: false, packets: make(chan protocol.IPacket, 20), currentSequenceNumber: 0, sendDatagram: make(chan protocol.Datagram, 3)}
+	return &Session{address: address, port: port, opened: false, connected: false, packets: make(chan protocol.IPacket, 20), packetBatches: make(chan protocol.EncapsulatedPacket, 512), currentSequenceNumber: 0, sendDatagram: make(chan protocol.Datagram, 3)}
 }
 
 func (session *Session) Open() {
@@ -73,4 +74,16 @@ func (session *Session) GetMtuSize() int16 {
 
 func (session *Session) GetClientId() uint64 {
 	return session.clientId
+}
+
+func (session *Session) GetReadyEncapsulatedPackets() []protocol.EncapsulatedPacket {
+	var packets = []protocol.EncapsulatedPacket{}
+	for len(session.packetBatches) != 0 {
+		packets = append(packets, <-session.packetBatches)
+	}
+	return packets
+}
+
+func (session *Session) AddProcessedEncapsulatedPacket(packet protocol.EncapsulatedPacket) {
+	session.packetBatches <- packet
 }

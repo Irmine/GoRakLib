@@ -54,7 +54,7 @@ func (manager *SessionManager) HandleEncapsulated(packet *protocol.EncapsulatedP
 		session.SetConnected(true)
 
 	case 0xFE:
-		manager.AddProcessedEncapsulatedPacket(*packet)
+		session.AddProcessedEncapsulatedPacket(*packet)
 
 	default:
 		fmt.Println("Unknown encapsulated packet:", packet.Buffer[0])

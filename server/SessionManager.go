@@ -10,12 +10,15 @@ type SessionManager struct {
 	server *GoRakLibServer
 	sessions map[string]*Session
 
-	packetBatches chan protocol.EncapsulatedPacket
 	splits map[int]map[int]*protocol.EncapsulatedPacket
 }
 
 func NewSessionManager(server *GoRakLibServer) *SessionManager {
-	return &SessionManager{server, make(map[string]*Session), make(chan protocol.EncapsulatedPacket, 512), make(map[int]map[int]*protocol.EncapsulatedPacket)}
+	return &SessionManager{server, make(map[string]*Session), make(map[int]map[int]*protocol.EncapsulatedPacket)}
+}
+
+func (manager *SessionManager) GetSessions() map[string]*Session {
+	return manager.sessions
 }
 
 func (manager *SessionManager) CreateSession(address string, port uint16) {
@@ -35,18 +38,6 @@ func (manager *SessionManager) GetSession(address string, port uint16) (*Session
 	}
 	session = manager.sessions[address + ":" + strconv.Itoa(int(port))]
 	return session, nil
-}
-
-func (manager *SessionManager) AddProcessedEncapsulatedPacket(packet protocol.EncapsulatedPacket) {
-	manager.packetBatches <- packet
-}
-
-func (manager *SessionManager) GetReadyEncapsulatedPackets() []protocol.EncapsulatedPacket {
-	var packets = []protocol.EncapsulatedPacket{}
-	for len(manager.packetBatches) != 0 {
-		packets = append(packets, <-manager.packetBatches)
-	}
-	return packets
 }
 
 func (manager *SessionManager) Tick() {

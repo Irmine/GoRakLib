@@ -2,7 +2,6 @@ package protocol
 
 import (
 	"errors"
-	"fmt"
 )
 
 const (
