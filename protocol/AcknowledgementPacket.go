@@ -1,6 +1,9 @@
 package protocol
 
-import "goraklib/protocol/identifiers"
+import (
+	"goraklib/protocol/identifiers"
+	"sort"
+)
 
 type AcknowledgementPacket struct {
 	*Packet
@@ -28,7 +31,13 @@ func NewNACK() NACK {
 }
 
 func (packet AcknowledgementPacket) Encode() {
+	sort.Slice(packet.packets, func(i, j int) bool {
+		return packet.packets[i] < packet.packets[j]
+	})
+	var packetCount = len(packet.packets)
+	if packetCount < 0 {
 
+	}
 }
 
 func (packet AcknowledgementPacket) Decode() {
