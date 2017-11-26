@@ -3,11 +3,13 @@ package protocol
 import (
 	"goraklib/protocol/identifiers"
 	"sort"
+	"goraklib/binary"
+	"fmt"
 )
 
 type AcknowledgementPacket struct {
 	*Packet
-	packets []uint32
+	Packets []uint32
 }
 
 type ACK struct {
@@ -19,9 +21,9 @@ type NACK struct {
 }
 
 func NewACK() ACK {
-	return ACK{&AcknowledgementPacket{&Packet{
-		packetId: identifiers.PacketAck,
-	}, []uint32{}}}
+	return ACK{&AcknowledgementPacket{NewPacket(
+		identifiers.PacketAck,
+	), []uint32{}}}
 }
 
 func NewNACK() NACK {
@@ -31,18 +33,55 @@ func NewNACK() NACK {
 }
 
 func (packet AcknowledgementPacket) Encode() {
-	sort.Slice(packet.packets, func(i, j int) bool {
-		return packet.packets[i] < packet.packets[j]
-	})
-	var packetCount = len(packet.packets)
-	if packetCount < 0 {
+	packet.EncodeId()
 
+	sort.Slice(packet.Packets, func(i, j int) bool {
+		return packet.Packets[i] < packet.Packets[j]
+	})
+
+	var packetCount = len(packet.Packets)
+
+	if packetCount == 0 {
+		packet.PutShort(0)
+		return
 	}
+
+	var stream = binary.NewStream()
+	stream.ResetStream()
+
+	var pointer = 1
+	var firstPacket = packet.Packets[0]
+	var lastPacket = packet.Packets[0]
+
+	for pointer < packetCount {
+		currentPacket := packet.Packets[pointer]
+		difference := currentPacket - lastPacket
+
+		if difference == 1 {
+			lastPacket = currentPacket
+		}
+
+		pointer++
+	}
+
+	if firstPacket == lastPacket {
+		stream.PutByte(01)
+		stream.PutTriad(firstPacket)
+	} else {
+		stream.PutByte(00)
+		stream.PutLittleTriad(firstPacket)
+		stream.PutLittleTriad(lastPacket)
+	}
+
+	fmt.Println(stream.Buffer)
+
+	packet.PutShort(1)
+	packet.PutBytes(stream.Buffer)
 }
 
 func (packet AcknowledgementPacket) Decode() {
 	packet.DecodeStep()
-	packet.packets = []uint32{}
+	packet.Packets = []uint32{}
 	var packetCount = packet.GetShort()
 	var count = 0
 
@@ -56,18 +95,13 @@ func (packet AcknowledgementPacket) Decode() {
 			}
 
 			for pack := start; pack < end; pack++ {
-				packet.packets = append(packet.packets, pack)
+				packet.Packets = append(packet.Packets, pack)
 				count++
 			}
 
 		} else {
-			packet.packets = append(packet.packets, packet.GetLittleTriad())
+			packet.Packets = append(packet.Packets, packet.GetLittleTriad())
 			count++
 		}
 	}
-}
-
-func (packet AcknowledgementPacket) Reset() {
-	packet.ResetBase()
-	packet.packets = []uint32{}
 }

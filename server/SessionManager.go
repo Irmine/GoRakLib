@@ -55,6 +55,6 @@ func (manager *SessionManager) Tick() {
 	}
 }
 
-func (manager *SessionManager) SendPacket(packet protocol.IPacket, ip string, port uint16) {
-	manager.server.udp.WriteBuffer(packet.GetBuffer(), ip, port)
+func (manager *SessionManager) SendPacket(packet protocol.IPacket, session *Session) {
+	manager.server.udp.WriteBuffer(packet.GetBuffer(), session.GetAddress(), session.GetPort())
 }

@@ -44,7 +44,7 @@ func (manager *SessionManager) HandleEncapsulated(packet *protocol.EncapsulatedP
 
 		datagram.Encode()
 
-		manager.SendPacket(datagram, session.GetAddress(), session.GetPort())
+		manager.SendPacket(datagram, session)
 
 	case identifiers.NewIncomingConnection:
 		var connection = protocol.NewNewIncomingConnection()

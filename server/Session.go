@@ -11,7 +11,7 @@ type Session struct {
 	port uint16
 	opened bool
 	connected bool
-	currentSequenceNumber int
+	currentSequenceNumber uint32
 	mtuSize int16
 	packets chan protocol.IPacket
 	packetBatches chan protocol.EncapsulatedPacket

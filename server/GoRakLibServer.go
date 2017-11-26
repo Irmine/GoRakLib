@@ -2,6 +2,7 @@ package server
 
 import (
 	"math/rand"
+	"goraklib/protocol"
 )
 
 type GoRakLibServer struct {
@@ -129,5 +130,23 @@ func (server *GoRakLibServer) IsSecure() bool {
 
 func (server *GoRakLibServer) Tick() {
 	server.sessionManager.Tick()
+}
+
+func (server *GoRakLibServer) SendPacket(packet protocol.IPacket, session *Session) {
+	if datagram, ok := packet.(*protocol.Datagram); ok {
+		datagram.SequenceNumber = session.currentSequenceNumber
+		datagram.Encode()
+
+		session.currentSequenceNumber++
+
+		var ack = protocol.NewACK()
+		ack.Packets = []uint32{datagram.SequenceNumber}
+		ack.Encode()
+
+		server.udp.WriteBuffer(ack.GetBuffer(), session.GetAddress(), session.GetPort())
+		server.udp.WriteBuffer(packet.GetBuffer(), session.GetAddress(), session.GetPort())
+
+	}
+	server.udp.WriteBuffer(packet.GetBuffer(), session.GetAddress(), session.GetPort())
 }
 
