@@ -54,7 +54,7 @@ func (datagram *Datagram) Decode() {
 	datagram.ContinuousSend = (flags & BitFlagContinuousSend) != 0
 	datagram.NeedsBAndAs = (flags & BitFlagNeedsBAndAs) != 0
 
-	datagram.SequenceNumber = datagram.GetLittleTriad()
+	datagram.SequenceNumber = datagram.GetTriad()
 
 	for !datagram.Feof() {
 		packet := NewEncapsulatedPacket()

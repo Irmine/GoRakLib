@@ -7,6 +7,12 @@ import (
 )
 
 func (manager *SessionManager) HandleDatagram(datagram *protocol.Datagram, session *Session) {
+
+	var ack = protocol.NewACK()
+	ack.Packets = []uint32{datagram.SequenceNumber}
+	ack.Encode()
+	manager.SendPacket(ack, session)
+
 	for _, packet := range *datagram.GetPackets() {
 		manager.HandleEncapsulated(packet, session)
 	}
@@ -17,6 +23,7 @@ func (manager *SessionManager) HandleEncapsulated(packet *protocol.EncapsulatedP
 		manager.HandleSplitEncapsulated(packet, session)
 		return
 	}
+
 	switch packet.Buffer[0] {
 	case identifiers.ConnectionRequest:
 		var request = protocol.NewConnectionRequest()

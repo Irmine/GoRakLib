@@ -140,13 +140,7 @@ func (server *GoRakLibServer) SendPacket(packet protocol.IPacket, session *Sessi
 
 		session.currentSequenceNumber++
 
-		var ack = protocol.NewACK()
-		ack.Packets = []uint32{datagram.SequenceNumber}
-		ack.Encode()
-
 		server.udp.WriteBuffer(datagram.GetBuffer(), session.GetAddress(), session.GetPort())
-		server.udp.WriteBuffer(ack.GetBuffer(), session.GetAddress(), session.GetPort())
-
 	} else {
 		server.udp.WriteBuffer(packet.GetBuffer(), session.GetAddress(), session.GetPort())
 	}
