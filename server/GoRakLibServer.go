@@ -135,6 +135,7 @@ func (server *GoRakLibServer) Tick() {
 func (server *GoRakLibServer) SendPacket(packet protocol.IPacket, session *Session) {
 	if datagram, ok := packet.(*protocol.Datagram); ok {
 		datagram.SequenceNumber = session.currentSequenceNumber
+		datagram.ResetStream()
 		datagram.Encode()
 
 		session.currentSequenceNumber++
@@ -143,10 +144,11 @@ func (server *GoRakLibServer) SendPacket(packet protocol.IPacket, session *Sessi
 		ack.Packets = []uint32{datagram.SequenceNumber}
 		ack.Encode()
 
+		server.udp.WriteBuffer(datagram.GetBuffer(), session.GetAddress(), session.GetPort())
 		server.udp.WriteBuffer(ack.GetBuffer(), session.GetAddress(), session.GetPort())
-		server.udp.WriteBuffer(packet.GetBuffer(), session.GetAddress(), session.GetPort())
 
+	} else {
+		server.udp.WriteBuffer(packet.GetBuffer(), session.GetAddress(), session.GetPort())
 	}
-	server.udp.WriteBuffer(packet.GetBuffer(), session.GetAddress(), session.GetPort())
 }
 

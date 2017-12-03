@@ -22,7 +22,7 @@ type Session struct {
 
 func NewSession(address string, port uint16) *Session {
 	fmt.Println("Session created for ip: " + address + ":" + strconv.Itoa(int(port)))
-	return &Session{address: address, port: port, opened: false, connected: false, packets: make(chan protocol.IPacket, 20), packetBatches: make(chan protocol.EncapsulatedPacket, 512), currentSequenceNumber: 0, sendDatagram: make(chan protocol.Datagram, 3)}
+	return &Session{address: address, port: port, opened: false, connected: false, packets: make(chan protocol.IPacket, 20), packetBatches: make(chan protocol.EncapsulatedPacket, 512), currentSequenceNumber: 1, sendDatagram: make(chan protocol.Datagram, 3)}
 }
 
 func (session *Session) Open() {

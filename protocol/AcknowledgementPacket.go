@@ -4,7 +4,6 @@ import (
 	"goraklib/protocol/identifiers"
 	"sort"
 	"goraklib/binary"
-	"fmt"
 )
 
 type AcknowledgementPacket struct {
@@ -16,23 +15,23 @@ type ACK struct {
 	*AcknowledgementPacket
 }
 
-type NACK struct {
+type NAK struct {
 	*AcknowledgementPacket
 }
 
-func NewACK() ACK {
-	return ACK{&AcknowledgementPacket{NewPacket(
+func NewACK() *ACK {
+	return &ACK{&AcknowledgementPacket{NewPacket(
 		identifiers.PacketAck,
 	), []uint32{}}}
 }
 
-func NewNACK() NACK {
-	return NACK{&AcknowledgementPacket{&Packet{
+func NewNAK() *NAK {
+	return &NAK{&AcknowledgementPacket{&Packet{
 		packetId: identifiers.PacketNack,
 	}, []uint32{}}}
 }
 
-func (packet AcknowledgementPacket) Encode() {
+func (packet *AcknowledgementPacket) Encode() {
 	packet.EncodeId()
 
 	sort.Slice(packet.Packets, func(i, j int) bool {
@@ -73,13 +72,11 @@ func (packet AcknowledgementPacket) Encode() {
 		stream.PutLittleTriad(lastPacket)
 	}
 
-	fmt.Println(stream.Buffer)
-
 	packet.PutShort(1)
 	packet.PutBytes(stream.Buffer)
 }
 
-func (packet AcknowledgementPacket) Decode() {
+func (packet *AcknowledgementPacket) Decode() {
 	packet.DecodeStep()
 	packet.Packets = []uint32{}
 	var packetCount = packet.GetShort()
