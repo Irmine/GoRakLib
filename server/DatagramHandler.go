@@ -70,6 +70,11 @@ func (manager *SessionManager) HandleEncapsulated(packet *protocol.EncapsulatedP
 
 func (manager *SessionManager) HandleSplitEncapsulated(packet *protocol.EncapsulatedPacket, session *Session) {
 	var id = int(packet.SplitId)
+
+	if manager.splits[id] == nil {
+		manager.splits[id] = map[int]*protocol.EncapsulatedPacket{}
+	}
+
 	manager.splits[id][int(packet.SplitIndex)] = packet
 
 	if len(manager.splits[id]) == int(packet.SplitCount) {

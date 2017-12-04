@@ -77,7 +77,7 @@ func (session *Session) GetClientId() uint64 {
 }
 
 func (session *Session) GetReadyEncapsulatedPackets() []protocol.EncapsulatedPacket {
-	var packets = []protocol.EncapsulatedPacket{}
+	var packets []protocol.EncapsulatedPacket
 	for len(session.packetBatches) != 0 {
 		packets = append(packets, <-session.packetBatches)
 	}
