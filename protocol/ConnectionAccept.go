@@ -37,5 +37,16 @@ func (request *ConnectionAccept) Encode() {
 }
 
 func (request *ConnectionAccept) Decode() {
+	request.DecodeStep()
+	request.ClientAddress, request.ClientPort, _ = request.GetAddress()
 
+	for i := 0; i < 20; i++ {
+		address, port, version := request.GetAddress()
+		request.SystemAddresses = append(request.SystemAddresses, address)
+		request.SystemPorts = append(request.SystemPorts, port)
+		request.SystemIdVersions = append(request.SystemIdVersions, version)
+	}
+
+	request.PingSendTime = request.GetUnsignedLong()
+	request.PongSendTime = request.GetUnsignedLong()
 }

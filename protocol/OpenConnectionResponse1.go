@@ -17,12 +17,16 @@ func NewOpenConnectionResponse1() *OpenConnectionResponse1 {
 
 func (response *OpenConnectionResponse1) Encode() {
 	response.EncodeId()
-	response.WriteMagic()
+	response.PutMagic()
 	response.PutLong(response.ServerId)
 	response.PutByte(response.Security)
 	response.PutShort(response.MtuSize)
 }
 
 func (response *OpenConnectionResponse1) Decode() {
-
+	response.DecodeStep()
+	response.ReadMagic()
+	response.ServerId = response.GetLong()
+	response.Security = response.GetByte()
+	response.MtuSize = response.GetShort()
 }

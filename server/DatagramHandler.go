@@ -35,23 +35,14 @@ func (manager *SessionManager) HandleEncapsulated(packet *protocol.EncapsulatedP
 		var accept = protocol.NewConnectionAccept()
 		accept.ClientAddress = session.GetAddress()
 		accept.ClientPort = session.GetPort()
+
 		accept.PingSendTime = request.PingSendTime
-		accept.PongSendTime = request.PingSendTime
+		var pongTime = uint64(manager.server.GetRunTime())
+		accept.PongSendTime = pongTime
 
-		accept.Encode()
+		manager.sendRawPacket(accept, session)
 
-		var encPacket = protocol.NewEncapsulatedPacket()
-		encPacket.Buffer = accept.Buffer
-		encPacket.Reliability = protocol.ReliabilityUnreliable
-
-		var datagram = protocol.NewDatagram()
-		session.currentSequenceNumber++
-		datagram.SequenceNumber = uint32(session.currentSequenceNumber)
-		datagram.AddPacket(&encPacket)
-
-		datagram.Encode()
-
-		manager.SendPacket(datagram, session)
+		session.SetPing(pongTime - request.PingSendTime)
 
 	case identifiers.NewIncomingConnection:
 		var connection = protocol.NewNewIncomingConnection()
@@ -59,6 +50,29 @@ func (manager *SessionManager) HandleEncapsulated(packet *protocol.EncapsulatedP
 		connection.Decode()
 
 		session.SetConnected(true)
+
+	case identifiers.ConnectedPing:
+		var ping = protocol.NewConnectedPing()
+		ping.Buffer = packet.Buffer
+		ping.Decode()
+
+		var pong = protocol.NewConnectedPong()
+		pong.PingSendTime = ping.PingSendTime
+		var pongTime = manager.server.GetRunTime()
+		pong.PongSendTime = pongTime
+
+		manager.sendRawPacket(pong, session)
+
+		manager.SendPing(session)
+
+	case identifiers.ConnectedPong:
+		var pong = protocol.NewConnectedPong()
+		pong.Buffer = packet.Buffer
+		pong.Decode()
+
+		ping := uint64(manager.server.GetRunTime() - pong.PingSendTime)
+
+		session.SetPing(ping)
 
 	case 0xFE:
 		session.AddProcessedEncapsulatedPacket(*packet)
@@ -71,19 +85,45 @@ func (manager *SessionManager) HandleEncapsulated(packet *protocol.EncapsulatedP
 func (manager *SessionManager) HandleSplitEncapsulated(packet *protocol.EncapsulatedPacket, session *Session) {
 	var id = int(packet.SplitId)
 
-	if manager.splits[id] == nil {
-		manager.splits[id] = map[int]*protocol.EncapsulatedPacket{}
+	if session.splits[id] == nil {
+		session.splits[id] = make(chan *protocol.EncapsulatedPacket, packet.SplitCount)
 	}
 
-	manager.splits[id][int(packet.SplitIndex)] = packet
+	session.splits[id] <- packet
 
-	if len(manager.splits[id]) == int(packet.SplitCount) {
+	if len(session.splits[id]) == int(packet.SplitCount) {
 		var newPacket = protocol.NewEncapsulatedPacket()
-		for _, pk := range manager.splits[id] {
+
+		for len(session.splits[id]) != 0 {
+			pk := <-session.splits[id]
 			newPacket.PutBytes(pk.GetBuffer())
 		}
+
 		manager.HandleEncapsulated(&newPacket, session)
 
-		delete(manager.splits, id)
+		delete(session.splits, id)
 	}
+}
+
+func (manager *SessionManager) SendPing(session *Session) {
+	var ping = protocol.NewConnectedPing()
+	ping.PingSendTime = manager.server.GetRunTime()
+
+	manager.sendRawPacket(ping, session)
+}
+
+func (manager *SessionManager) sendRawPacket(packet protocol.IPacket, session *Session) {
+	var encPacket = protocol.NewEncapsulatedPacket()
+	packet.Encode()
+	encPacket.Buffer = packet.GetBuffer()
+	encPacket.Reliability = protocol.ReliabilityUnreliable
+
+	var datagram = protocol.NewDatagram()
+	session.currentSequenceNumber++
+	datagram.SequenceNumber = uint32(session.currentSequenceNumber)
+	datagram.AddPacket(&encPacket)
+
+	datagram.Encode()
+
+	manager.SendPacket(datagram, session)
 }

@@ -25,6 +25,7 @@ func NewUDPServer(address string, port uint16) UDPServer {
 	if address == "127.0.0.1" {
 		address = ""
 	}
+
 	var addr, err = net.ResolveUDPAddr("udp", address + ":" + strconv.Itoa(int(port)))
 	addr.Port = int(port)
 

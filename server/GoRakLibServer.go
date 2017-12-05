@@ -3,6 +3,7 @@ package server
 import (
 	"math/rand"
 	"goraklib/protocol"
+	"time"
 )
 
 type GoRakLibServer struct {
@@ -18,6 +19,8 @@ type GoRakLibServer struct {
 	minecraftProtocol uint
 	minecraftVersion string
 	security bool
+
+	startingTime int64
 }
 
 func NewGoRakLibServer(serverName string, address string, port uint16) *GoRakLibServer {
@@ -30,6 +33,8 @@ func NewGoRakLibServer(serverName string, address string, port uint16) *GoRakLib
 	server.udp = &udp
 	server.port = port
 	server.sessionManager = NewSessionManager(&server)
+
+	server.startingTime = time.Now().UnixNano() / int64(time.Millisecond)
 
 	go func() {
 		for {
@@ -46,6 +51,11 @@ func NewGoRakLibServer(serverName string, address string, port uint16) *GoRakLib
 	}()
 
 	return &server
+}
+
+func (server *GoRakLibServer) GetRunTime() int64 {
+	var time = time.Now().UnixNano() / int64(time.Millisecond)
+	return time - server.startingTime
 }
 
 func (server *GoRakLibServer) GetSessionManager() *SessionManager {

@@ -17,7 +17,10 @@ func NewOpenConnectionRequest1() *OpenConnectionRequest1 {
 }
 
 func (request *OpenConnectionRequest1) Encode() {
-
+	request.EncodeId()
+	request.PutMagic()
+	request.PutByte(request.Protocol)
+	// TODO
 }
 
 func (request *OpenConnectionRequest1) Decode() {

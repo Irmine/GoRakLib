@@ -1,6 +1,6 @@
 package identifiers
 
 const (
-	PacketAck = 0xc0
-	PacketNack = 0xa0
+	DatagramAck = 0xc0
+	DatagramNack = 0xa0
 )

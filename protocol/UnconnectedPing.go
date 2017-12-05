@@ -6,7 +6,7 @@ import (
 
 type UnconnectedPing struct {
 	*UnconnectedMessage
-	PingId int64
+	PingTime int64
 }
 
 func NewUnconnectedPing() *UnconnectedPing {
@@ -16,11 +16,13 @@ func NewUnconnectedPing() *UnconnectedPing {
 }
 
 func (ping *UnconnectedPing) Encode() {
-
+	ping.EncodeId()
+	ping.PutLong(ping.PingTime)
+	ping.PutMagic()
 }
 
 func (ping *UnconnectedPing) Decode() {
 	ping.DecodeStep()
-	ping.PingId = ping.GetLong()
+	ping.PingTime = ping.GetLong()
 	ping.ReadMagic()
 }

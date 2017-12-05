@@ -6,20 +6,20 @@ import (
 )
 
 type PacketPool struct {
-	packets map[int]protocol.IPacket
+	packets map[int]func() protocol.IPacket
 }
 
 func NewPacketPool() *PacketPool {
 	var pool = PacketPool{}
-	pool.packets = make(map[int]protocol.IPacket)
+	pool.packets = make(map[int]func() protocol.IPacket)
 
-	pool.RegisterPacket(identifiers.UnconnectedPing, protocol.NewUnconnectedPing())
-	pool.RegisterPacket(identifiers.OpenConnectionRequest1, protocol.NewOpenConnectionRequest1())
-	pool.RegisterPacket(identifiers.OpenConnectionRequest2, protocol.NewOpenConnectionRequest2())
+	pool.RegisterPacket(identifiers.UnconnectedPing, func() protocol.IPacket { return protocol.NewUnconnectedPing() })
+	pool.RegisterPacket(identifiers.OpenConnectionRequest1, func() protocol.IPacket { return protocol.NewOpenConnectionRequest1() })
+	pool.RegisterPacket(identifiers.OpenConnectionRequest2, func() protocol.IPacket { return protocol.NewOpenConnectionRequest2() })
 	return &pool
 }
 
-func (pool *PacketPool) RegisterPacket(id int, packet protocol.IPacket) {
+func (pool *PacketPool) RegisterPacket(id int, packet func() protocol.IPacket) {
 	pool.packets[id] = packet
 }
 
@@ -28,5 +28,5 @@ func (pool *PacketPool) GetPacket(id int) protocol.IPacket {
 	if !ok {
 		return protocol.NewDatagram()
 	}
-	return packet
+	return packet()
 }

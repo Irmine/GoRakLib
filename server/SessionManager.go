@@ -9,12 +9,10 @@ import (
 type SessionManager struct {
 	server *GoRakLibServer
 	sessions map[string]*Session
-
-	splits map[int]map[int]*protocol.EncapsulatedPacket
 }
 
 func NewSessionManager(server *GoRakLibServer) *SessionManager {
-	return &SessionManager{server, make(map[string]*Session), make(map[int]map[int]*protocol.EncapsulatedPacket)}
+	return &SessionManager{server, make(map[string]*Session)}
 }
 
 func (manager *SessionManager) GetSessions() map[string]*Session {

@@ -7,7 +7,7 @@ import (
 
 type UnconnectedPong struct {
 	*UnconnectedMessage
-	PingId int64
+	PingTime int64
 	ServerId int64
 	ServerName string
 	ServerProtocol uint
@@ -16,19 +16,22 @@ type UnconnectedPong struct {
 	MaximumPlayers uint
 	Motd string
 	DefaultGameMode string
+
+	// Raw data from pong.
+	ServerData string
 }
 
 func NewUnconnectedPong() *UnconnectedPong {
 	return &UnconnectedPong{NewUnconnectedMessage(NewPacket(
 		identifiers.UnconnectedPong,
-	)), 0, 0, "", 0, "", 0, 20, "", ""}
+	)), 0, 0, "", 0, "", 0, 20, "", "", ""}
 }
 
 func (pong *UnconnectedPong) Encode() {
 	pong.EncodeId()
-	pong.PutLong(pong.PingId)
+	pong.PutLong(pong.PingTime)
 	pong.PutLong(pong.ServerId)
-	pong.WriteMagic()
+	pong.PutMagic()
 	pong.PutString(
 		"MCPE;" +
 		pong.ServerName + ";" +
@@ -44,7 +47,8 @@ func (pong *UnconnectedPong) Encode() {
 
 func (pong *UnconnectedPong) Decode() {
 	pong.DecodeStep()
-	pong.PingId = pong.GetLong()
+	pong.PingTime = pong.GetLong()
 	pong.ServerId = pong.GetLong()
 	pong.ReadMagic()
+	pong.ServerData = pong.GetString()
 }

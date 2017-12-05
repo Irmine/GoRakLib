@@ -21,7 +21,7 @@ func NewOpenConnectionResponse2() *OpenConnectionResponse2 {
 
 func (response *OpenConnectionResponse2) Encode() {
 	response.EncodeId()
-	response.WriteMagic()
+	response.PutMagic()
 	response.PutLong(response.ServerId)
 	response.PutAddress(response.ClientAddress, response.ClientPort, 4)
 	response.PutShort(response.MtuSize)
@@ -29,6 +29,11 @@ func (response *OpenConnectionResponse2) Encode() {
 }
 
 func (response *OpenConnectionResponse2) Decode() {
-
+	response.DecodeStep()
+	response.ReadMagic()
+	response.ServerId = response.GetLong()
+	response.ClientAddress, response.ClientPort, _ = response.GetAddress()
+	response.MtuSize = response.GetShort()
+	response.Security = response.GetByte()
 }
 

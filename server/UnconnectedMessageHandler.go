@@ -7,7 +7,7 @@ func (manager *SessionManager) HandleUnconnectedMessage(packetInterface protocol
 	case *protocol.UnconnectedPing:
 		var pong = protocol.NewUnconnectedPong()
 
-		pong.PingId = packet.PingId
+		pong.PingTime = manager.server.GetRunTime()
 		pong.ServerId = manager.server.GetServerId()
 		pong.ServerName = manager.server.GetServerName()
 		pong.ServerProtocol = manager.server.GetMinecraftProtocol()

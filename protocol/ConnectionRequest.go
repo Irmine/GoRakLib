@@ -16,7 +16,9 @@ func NewConnectionRequest() *ConnectionRequest {
 }
 
 func (request *ConnectionRequest) Encode() {
-
+	request.EncodeId()
+	request.PutUnsignedLong(request.ClientId)
+	request.PutUnsignedLong(request.PingSendTime)
 }
 
 func (request *ConnectionRequest) Decode() {

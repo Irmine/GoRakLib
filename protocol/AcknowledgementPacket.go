@@ -21,13 +21,13 @@ type NAK struct {
 
 func NewACK() *ACK {
 	return &ACK{&AcknowledgementPacket{NewPacket(
-		identifiers.PacketAck,
+		identifiers.DatagramAck,
 	), []uint32{}}}
 }
 
 func NewNAK() *NAK {
 	return &NAK{&AcknowledgementPacket{&Packet{
-		packetId: identifiers.PacketNack,
+		packetId: identifiers.DatagramNack,
 	}, []uint32{}}}
 }
 

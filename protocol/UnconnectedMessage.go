@@ -16,7 +16,7 @@ func NewUnconnectedMessage(packet *Packet) *UnconnectedMessage {
 	return &UnconnectedMessage{packet, make([]byte, 16)}
 }
 
-func (message *UnconnectedMessage) WriteMagic() {
+func (message *UnconnectedMessage) PutMagic() {
 	message.PutBytes(magic)
 }
 

@@ -20,7 +20,19 @@ func NewNewIncomingConnection() *NewIncomingConnection {
 }
 
 func (request *NewIncomingConnection) Encode() {
+	request.EncodeId()
+	request.PutAddress(request.ServerAddress, request.ServerPort, 4)
 
+	for i := 0; i < 20; i++ {
+		if i < len(request.SystemAddresses) {
+			request.PutAddress(request.SystemAddresses[i], request.SystemPorts[i], request.SystemIdVersions[i])
+		} else {
+			request.PutAddress("0.0.0.0", 0, 4)
+		}
+	}
+
+	request.PutUnsignedLong(request.PingSendTime)
+	request.PutUnsignedLong(request.PongSendTime)
 }
 
 func (request *NewIncomingConnection) Decode() {

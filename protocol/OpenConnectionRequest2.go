@@ -19,7 +19,11 @@ func NewOpenConnectionRequest2() *OpenConnectionRequest2 {
 }
 
 func (request *OpenConnectionRequest2) Encode() {
-
+	request.EncodeId()
+	request.PutMagic()
+	request.PutAddress(request.ServerAddress, request.ServerPort, 4)
+	request.PutShort(request.MtuSize)
+	request.PutLong(request.ClientId)
 }
 
 func (request *OpenConnectionRequest2) Decode() {

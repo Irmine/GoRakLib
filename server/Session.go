@@ -9,20 +9,27 @@ import (
 type Session struct {
 	address string
 	port uint16
+
 	opened bool
 	connected bool
+
 	currentSequenceNumber uint32
 	mtuSize int16
+
 	packets chan protocol.IPacket
 	packetBatches chan protocol.EncapsulatedPacket
 
-	sendDatagram chan protocol.Datagram
+	splits map[int]chan *protocol.EncapsulatedPacket
+
 	clientId uint64
+
+	ping uint64
 }
 
 func NewSession(address string, port uint16) *Session {
-	fmt.Println("Session created for ip: " + address + ":" + strconv.Itoa(int(port)))
-	return &Session{address: address, port: port, opened: false, connected: false, packets: make(chan protocol.IPacket, 20), packetBatches: make(chan protocol.EncapsulatedPacket, 512), currentSequenceNumber: 1, sendDatagram: make(chan protocol.Datagram, 3)}
+	var session = &Session{address: address, port: port, opened: false, connected: false, splits: make(map[int]chan *protocol.EncapsulatedPacket), packets: make(chan protocol.IPacket, 20), packetBatches: make(chan protocol.EncapsulatedPacket, 512), currentSequenceNumber: 1}
+	fmt.Println("Session created for ip:", session)
+	return session
 }
 
 func (session *Session) Open() {
@@ -86,4 +93,16 @@ func (session *Session) GetReadyEncapsulatedPackets() []protocol.EncapsulatedPac
 
 func (session *Session) AddProcessedEncapsulatedPacket(packet protocol.EncapsulatedPacket) {
 	session.packetBatches <- packet
+}
+
+func (session *Session) GetPing() uint64 {
+	return session.ping
+}
+
+func (session *Session) SetPing(ping uint64) {
+	session.ping = ping
+}
+
+func (session *Session) String() string {
+	return session.address + ":" + strconv.Itoa(int(session.port))
 }

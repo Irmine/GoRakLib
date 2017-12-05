@@ -53,7 +53,7 @@ func (packet *Packet) GetAddress() (address string, port uint16, ipVersion byte)
 	default:
 	case 4:
 		var parts = []byte{(-packet.GetByte() - 1) & 0xff, (-packet.GetByte() - 1) & 0xff, (-packet.GetByte() - 1) & 0xff, (-packet.GetByte() - 1) & 0xff}
-		var stringArr = []string{}
+		var stringArr []string
 		for _, part := range parts {
 			stringArr = append(stringArr, strconv.Itoa(int(part)))
 		}
