@@ -93,7 +93,7 @@ func (manager *SessionManager) HandleSplitEncapsulated(packet *protocol.Encapsul
 
 	if len(session.splits[id]) == int(packet.SplitCount) {
 		var newPacket = protocol.NewEncapsulatedPacket()
-
+		newPacket.ResetStream()
 		for len(session.splits[id]) != 0 {
 			pk := <-session.splits[id]
 			newPacket.PutBytes(pk.GetBuffer())
