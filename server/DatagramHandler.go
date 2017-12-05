@@ -99,7 +99,7 @@ func (manager *SessionManager) HandleSplitEncapsulated(packet *protocol.Encapsul
 			newPacket.PutBytes(pk.GetBuffer())
 		}
 
-		manager.HandleEncapsulated(&newPacket, session)
+		manager.HandleEncapsulated(newPacket, session)
 
 		delete(session.splits, id)
 	}
@@ -121,7 +121,7 @@ func (manager *SessionManager) sendRawPacket(packet protocol.IPacket, session *S
 	var datagram = protocol.NewDatagram()
 	session.currentSequenceNumber++
 	datagram.SequenceNumber = uint32(session.currentSequenceNumber)
-	datagram.AddPacket(&encPacket)
+	datagram.AddPacket(encPacket)
 
 	datagram.Encode()
 

@@ -60,7 +60,7 @@ func (datagram *Datagram) Decode() {
 		packet := NewEncapsulatedPacket()
 		packet, err := packet.GetFromBinary(datagram)
 		if err == nil {
-			var packets = append(*datagram.packets, &packet)
+			var packets = append(*datagram.packets, packet)
 			datagram.packets = &packets
 		}
 	}

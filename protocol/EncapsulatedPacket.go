@@ -29,23 +29,23 @@ type EncapsulatedPacket struct {
 	SplitIndex uint
 }
 
-func NewEncapsulatedPacket() EncapsulatedPacket {
+func NewEncapsulatedPacket() *EncapsulatedPacket {
 	var packet = EncapsulatedPacket{NewPacket(0), 0, false, 0, 0, 0, 0, 0, 0, 0}
-	return packet
+	return &packet
 }
 
-func (packet *EncapsulatedPacket) GetFromBinary(stream *Datagram) (EncapsulatedPacket, error) {
+func (packet *EncapsulatedPacket) GetFromBinary(stream *Datagram) (*EncapsulatedPacket, error) {
 	var flags = stream.GetByte()
 	packet.Reliability = (flags & 224) >> 5
 	packet.HasSplit = (flags & 16) != 0
 
 	if stream.Feof() {
-		return *packet, errors.New("no bytes left to read")
+		return packet, errors.New("no bytes left to read")
 	}
 	packet.Length = uint(stream.GetUnsignedShort() / 8)
 
 	if packet.Length == 0 {
-		return *packet, errors.New("null encapsulated packet")
+		return packet, errors.New("null encapsulated packet")
 	}
 
 	if packet.IsReliable() {
@@ -65,7 +65,7 @@ func (packet *EncapsulatedPacket) GetFromBinary(stream *Datagram) (EncapsulatedP
 
 	packet.SetBuffer(stream.Get(int(packet.Length)))
 
-	return *packet, nil
+	return packet, nil
 }
 
 func (packet *EncapsulatedPacket) Encode() {
