@@ -54,8 +54,7 @@ func (udp *UDPServer) ReadBuffer() (protocol.IPacket, string, uint16, error) {
 	n, addr, err := udp.Conn.ReadFromUDP(buffer)
 
 	if err != nil {
-		fmt.Printf("An error has occurred: %v", err)
-		os.Exit(1)
+		panic(err)
 	}
 
 	var packet protocol.IPacket
