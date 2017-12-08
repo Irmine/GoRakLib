@@ -57,6 +57,8 @@ func (udp *UDPServer) ReadBuffer() (protocol.IPacket, string, uint16, error) {
 		panic(err)
 	}
 
+	buffer = buffer[:n]
+
 	var packet protocol.IPacket
 
 	if n == 0 {
