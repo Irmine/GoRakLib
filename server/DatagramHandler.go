@@ -103,7 +103,7 @@ func (manager *SessionManager) HandleSplitEncapsulated(packet *protocol.Encapsul
 		}
 
 		for _, pk := range packets {
-			newPacket.PutBytes(pk.GetBuffer())
+			newPacket.PutBytes(pk.Buffer)
 		}
 
 		manager.HandleEncapsulated(newPacket, session)

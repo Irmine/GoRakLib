@@ -43,10 +43,14 @@ func (manager *SessionManager) Tick() {
 		for !session.IsStackEmpty() {
 			packet := session.FetchFromStack()
 			if packet.HasMagic() {
-				go manager.HandleUnconnectedMessage(packet, session)
+				go func(message protocol.IPacket, session2 *Session) {
+					manager.HandleUnconnectedMessage(packet, session2)
+				}(packet, session)
 			} else {
 				if packet, ok := packet.(*protocol.Datagram); ok {
-					go manager.HandleDatagram(packet, session)
+					go func(datagram *protocol.Datagram, session2 *Session) {
+						manager.HandleDatagram(datagram, session2)
+					}(packet, session)
 				}
 			}
 		}
