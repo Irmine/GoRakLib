@@ -42,6 +42,7 @@ func (packet *EncapsulatedPacket) GetFromBinary(stream *Datagram) (*Encapsulated
 	if stream.Feof() {
 		return packet, errors.New("no bytes left to read")
 	}
+
 	packet.Length = uint(stream.GetUnsignedShort() / 8)
 
 	if packet.Length == 0 {

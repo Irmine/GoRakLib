@@ -7,7 +7,6 @@ import (
 )
 
 func (manager *SessionManager) HandleDatagram(datagram *protocol.Datagram, session *Session) {
-
 	var ack = protocol.NewACK()
 	ack.Packets = []uint32{datagram.SequenceNumber}
 	ack.Encode()

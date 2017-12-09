@@ -21,6 +21,11 @@ func (manager *SessionManager) HandleUnconnectedMessage(packetInterface protocol
 		manager.SendPacket(pong, session)
 
 	case *protocol.OpenConnectionRequest1:
+		if session.opening {
+			return
+		}
+
+		session.opening = true
 		var response = protocol.NewOpenConnectionResponse1()
 
 		response.ServerId = manager.server.GetServerId()
@@ -52,5 +57,7 @@ func (manager *SessionManager) HandleUnconnectedMessage(packetInterface protocol
 		response.Encode()
 		manager.SendPacket(response, session)
 		session.Open()
+
+		session.opening = false
 	}
 }

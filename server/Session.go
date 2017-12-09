@@ -10,6 +10,7 @@ type Session struct {
 	address string
 	port uint16
 
+	opening bool
 	opened bool
 	connected bool
 
