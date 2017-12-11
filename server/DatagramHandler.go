@@ -17,6 +17,17 @@ func (manager *SessionManager) HandleDatagram(datagram *protocol.Datagram, sessi
 	}
 }
 
+func (manager *SessionManager) HandleAck(ack *protocol.ACK, session *Session) {
+	session.recoveryQueue.FlagForDeletion(ack.Packets)
+}
+
+func (manager *SessionManager) HandleNak(nak *protocol.NAK, session *Session) {
+	var datagrams = session.recoveryQueue.Recover(nak.Packets)
+	for _, datagram := range datagrams {
+		session.SendConnectedPacket(datagram, protocol.ReliabilityReliableOrdered, PriorityHigh)
+	}
+}
+
 func (manager *SessionManager) HandleEncapsulated(packet *protocol.EncapsulatedPacket, session *Session) {
 	if packet.HasSplit {
 		manager.HandleSplitEncapsulated(packet, session)
@@ -39,7 +50,7 @@ func (manager *SessionManager) HandleEncapsulated(packet *protocol.EncapsulatedP
 		var pongTime = uint64(manager.server.GetRunTime())
 		accept.PongSendTime = pongTime
 
-		manager.sendRawPacket(accept, session)
+		session.SendConnectedPacket(accept, protocol.ReliabilityUnreliable, PriorityImmediate)
 
 		session.SetPing(pongTime - request.PingSendTime)
 
@@ -60,7 +71,7 @@ func (manager *SessionManager) HandleEncapsulated(packet *protocol.EncapsulatedP
 		var pongTime = manager.server.GetRunTime()
 		pong.PongSendTime = pongTime
 
-		manager.sendRawPacket(pong, session)
+		session.SendConnectedPacket(pong, protocol.ReliabilityUnreliable, PriorityLow)
 
 		manager.SendPing(session)
 
@@ -98,12 +109,14 @@ func (manager *SessionManager) HandleSplitEncapsulated(packet *protocol.Encapsul
 
 		for len(session.splits[id]) != 0 {
 			pk := <-session.splits[id]
-			packets[pk.SplitIndex] = pk
+			packets[pk.SplitIndex - session.lastSplitSize] = pk
 		}
 
 		for _, pk := range packets {
 			newPacket.PutBytes(pk.Buffer)
 		}
+
+		session.lastSplitSize = packet.SplitCount - 1
 
 		manager.HandleEncapsulated(newPacket, session)
 
@@ -115,21 +128,5 @@ func (manager *SessionManager) SendPing(session *Session) {
 	var ping = protocol.NewConnectedPing()
 	ping.PingSendTime = manager.server.GetRunTime()
 
-	manager.sendRawPacket(ping, session)
-}
-
-func (manager *SessionManager) sendRawPacket(packet protocol.IPacket, session *Session) {
-	var encPacket = protocol.NewEncapsulatedPacket()
-	packet.Encode()
-	encPacket.Buffer = packet.GetBuffer()
-	encPacket.Reliability = protocol.ReliabilityUnreliable
-
-	var datagram = protocol.NewDatagram()
-	session.currentSequenceNumber++
-	datagram.SequenceNumber = uint32(session.currentSequenceNumber)
-	datagram.AddPacket(encPacket)
-
-	datagram.Encode()
-
-	manager.SendPacket(datagram, session)
+	session.SendConnectedPacket(ping, protocol.ReliabilityUnreliable, PriorityMedium)
 }

@@ -7,6 +7,10 @@ import (
 )
 
 type Session struct {
+	manager *SessionManager
+	queue *PriorityQueue
+	recoveryQueue *RecoveryQueue
+
 	address string
 	port uint16
 
@@ -25,12 +29,59 @@ type Session struct {
 	clientId uint64
 
 	ping uint64
+
+	orderIndex map[byte]uint32
+	messageIndex uint32
+
+	lastSplitSize uint
+	splitId int16
 }
 
-func NewSession(address string, port uint16) *Session {
-	var session = &Session{address: address, port: port, opened: false, connected: false, splits: make(map[int]chan *protocol.EncapsulatedPacket), packets: make(chan protocol.IPacket, 20), packetBatches: make(chan protocol.EncapsulatedPacket, 512), currentSequenceNumber: 1}
+func NewSession(manager *SessionManager, address string, port uint16) *Session {
+	var session = &Session{recoveryQueue: NewRecoveryQueue(), orderIndex: make(map[byte]uint32), manager: manager, address: address, port: port, opened: false, connected: false, splits: make(map[int]chan *protocol.EncapsulatedPacket), packets: make(chan protocol.IPacket, 20), packetBatches: make(chan protocol.EncapsulatedPacket, 512), currentSequenceNumber: 1}
+	session.queue = NewPriorityQueue(session)
 	fmt.Println("Session created for ip:", session)
 	return session
+}
+
+func (session *Session) SendUnconnectedPacket(packet protocol.IPacket) {
+	packet.Encode()
+
+	session.manager.server.udp.WriteBuffer(packet.GetBuffer(), session.GetAddress(), session.GetPort())
+}
+
+func (session *Session) SendConnectedPacket(packet protocol.IConnectedPacket, reliability byte, priority byte) {
+	packet.Encode()
+
+	var encapsulatedPacket = protocol.NewEncapsulatedPacket()
+	encapsulatedPacket.Buffer = packet.GetBuffer()
+	encapsulatedPacket.OrderChannel = 0
+	encapsulatedPacket.Reliability = reliability
+
+	if priority != PriorityImmediate {
+		session.queue.AddEncapsulatedToQueue(encapsulatedPacket, priority)
+		return
+	}
+
+	if encapsulatedPacket.IsReliable() {
+		encapsulatedPacket.MessageIndex = session.messageIndex
+		session.messageIndex++
+	}
+	if encapsulatedPacket.IsSequenced() {
+		encapsulatedPacket.OrderIndex = session.orderIndex[encapsulatedPacket.OrderChannel]
+		session.orderIndex[encapsulatedPacket.OrderChannel]++
+	}
+
+	var datagram = protocol.NewDatagram()
+	datagram.NeedsBAndAs = true
+
+	datagram.SequenceNumber = session.currentSequenceNumber
+	session.currentSequenceNumber++
+
+	datagram.AddPacket(encapsulatedPacket)
+	session.manager.SendPacket(datagram, session)
+
+	session.recoveryQueue.AddRecoveryFor(datagram)
 }
 
 func (session *Session) Open() {

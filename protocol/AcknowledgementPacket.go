@@ -26,9 +26,9 @@ func NewACK() *ACK {
 }
 
 func NewNAK() *NAK {
-	return &NAK{&AcknowledgementPacket{&Packet{
-		packetId: identifiers.DatagramNack,
-	}, []uint32{}}}
+	return &NAK{&AcknowledgementPacket{NewPacket(
+		identifiers.DatagramNack,
+	), []uint32{}}}
 }
 
 func (packet *AcknowledgementPacket) Encode() {
@@ -78,6 +78,7 @@ func (packet *AcknowledgementPacket) Encode() {
 
 func (packet *AcknowledgementPacket) Decode() {
 	packet.DecodeStep()
+
 	packet.Packets = []uint32{}
 	var packetCount = packet.GetShort()
 	var count = 0

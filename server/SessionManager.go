@@ -20,7 +20,7 @@ func (manager *SessionManager) GetSessions() map[string]*Session {
 }
 
 func (manager *SessionManager) CreateSession(address string, port uint16) {
-	var session = NewSession(address, port)
+	var session = NewSession(manager, address, port)
 	manager.sessions[address + ":" + strconv.Itoa(int(port))] = session
 }
 
@@ -40,23 +40,28 @@ func (manager *SessionManager) GetSession(address string, port uint16) (*Session
 
 func (manager *SessionManager) Tick() {
 	for _, session := range manager.sessions {
-		for !session.IsStackEmpty() {
-			packet := session.FetchFromStack()
-			if packet.HasMagic() {
-				go func(message protocol.IPacket, session2 *Session) {
-					manager.HandleUnconnectedMessage(packet, session2)
-				}(packet, session)
-			} else {
-				if packet, ok := packet.(*protocol.Datagram); ok {
-					go func(datagram *protocol.Datagram, session2 *Session) {
-						manager.HandleDatagram(datagram, session2)
-					}(packet, session)
+		go func() {
+			for !session.IsStackEmpty() {
+				packet := session.FetchFromStack()
+				if packet.HasMagic() {
+					manager.HandleUnconnectedMessage(packet, session)
+				} else {
+					if datagram, ok := packet.(*protocol.Datagram); ok {
+						manager.HandleDatagram(datagram, session)
+					} else if nak, ok := packet.(*protocol.NAK); ok {
+						manager.HandleNak(nak, session)
+					} else if ack, ok := packet.(*protocol.ACK); ok {
+						manager.HandleAck(ack, session)
+					}
 				}
 			}
-		}
+			session.queue.Flush()
+		}()
 	}
 }
 
 func (manager *SessionManager) SendPacket(packet protocol.IPacket, session *Session) {
+	packet.Encode()
+
 	manager.server.udp.WriteBuffer(packet.GetBuffer(), session.GetAddress(), session.GetPort())
 }

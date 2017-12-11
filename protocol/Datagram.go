@@ -1,6 +1,10 @@
 package protocol
 
 const (
+	BitFlagValid = 0x80
+	BitFlagIsAck = 0x40
+	BitFlagIsNak = 0x20
+
 	BitFlagPacketPair = 0x10
 	BitFlagContinuousSend = 0x08
 	BitFlagNeedsBAndAs = 0x04
@@ -28,7 +32,7 @@ func (datagram *Datagram) GetPackets() *[]*EncapsulatedPacket {
 
 func (datagram *Datagram) Encode() {
 	datagram.Buffer = []byte{}
-	var flags = 0x80
+	var flags = BitFlagValid
 	if datagram.PacketPair {
 		flags |= BitFlagPacketPair
 	}
@@ -67,7 +71,11 @@ func (datagram *Datagram) Decode() {
 }
 
 func (datagram *Datagram) GetLength() int {
-	return 0
+	var length = 4
+	for _, pk := range *datagram.GetPackets() {
+		length += pk.GetLength()
+	}
+	return length
 }
 
 func (datagram *Datagram) AddPacket(packet *EncapsulatedPacket) {

@@ -13,6 +13,8 @@ const (
 	ReliabilityUnreliableWithAck
 	ReliabilityReliableWithAck
 	ReliabilityReliableOrderedWithAck
+
+	SplitFlag = 0x10
 )
 
 type EncapsulatedPacket struct {
@@ -37,7 +39,7 @@ func NewEncapsulatedPacket() *EncapsulatedPacket {
 func (packet *EncapsulatedPacket) GetFromBinary(stream *Datagram) (*EncapsulatedPacket, error) {
 	var flags = stream.GetByte()
 	packet.Reliability = (flags & 224) >> 5
-	packet.HasSplit = (flags & 16) != 0
+	packet.HasSplit = (flags & SplitFlag) != 0
 
 	if stream.Feof() {
 		return packet, errors.New("no bytes left to read")
@@ -64,6 +66,12 @@ func (packet *EncapsulatedPacket) GetFromBinary(stream *Datagram) (*Encapsulated
 		packet.SplitIndex = uint(stream.GetInt())
 	}
 
+	var diff = len(stream.Buffer) - packet.Offset
+	if diff < int(packet.Length) {
+		println("Packet ID:", stream.Buffer[packet.Offset + 1])
+		println("Bytes left:", diff, "Need:", packet.Length)
+		println("Has split:", packet.HasSplit)
+	}
 	packet.SetBuffer(stream.Get(int(packet.Length)))
 
 	return packet, nil
@@ -74,7 +82,7 @@ func (packet *EncapsulatedPacket) Encode() {
 
 	var splitValue = 0
 	if packet.HasSplit {
-		splitValue = 16
+		splitValue = SplitFlag
 	}
 	packet.SetBuffer([]byte{})
 
@@ -83,10 +91,10 @@ func (packet *EncapsulatedPacket) Encode() {
 	packet.PutShort(int16(len(buffer) << 3))
 
 	if packet.IsReliable() {
-		packet.PutLittleTriad(packet.MessageIndex)
+		packet.PutTriad(packet.MessageIndex)
 	}
 	if packet.IsSequenced() {
-		packet.PutLittleTriad(packet.OrderIndex)
+		packet.PutTriad(packet.OrderIndex)
 		packet.PutByte(packet.OrderChannel)
 	}
 
@@ -127,4 +135,18 @@ func (packet *EncapsulatedPacket) IsSequenced() bool {
 		return true
 	}
 	return false
+}
+
+func (packet *EncapsulatedPacket) GetLength() int {
+	var length = 3 + len(packet.Buffer)
+	if packet.IsReliable() {
+		length += 3
+	}
+	if packet.IsSequenced() {
+		length += 4
+	}
+	if packet.HasSplit {
+		length += 2
+	}
+	return length
 }

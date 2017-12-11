@@ -68,10 +68,7 @@ func (udp *UDPServer) ReadBuffer() (protocol.IPacket, string, uint16, error) {
 	var ip = addr.IP.To4().String()
 	var port = addr.Port
 
-	var idBuffer = buffer
-	var packetId = int(idBuffer[0])
-
-	packet = udp.pool.GetPacket(packetId)
+	packet = udp.pool.GetPacket(buffer)
 
 	packet.SetBuffer(buffer)
 

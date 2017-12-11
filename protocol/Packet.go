@@ -11,6 +11,11 @@ type Packet struct {
 	*binary.BinaryStream
 }
 
+type IConnectedPacket interface {
+	Encode()
+	GetBuffer() []byte
+}
+
 type IPacket interface {
 	SetBuffer([]byte)
 	GetBuffer() []byte

@@ -17,8 +17,7 @@ func (manager *SessionManager) HandleUnconnectedMessage(packetInterface protocol
 		pong.MaximumPlayers = manager.server.GetMaxConnectedSessions()
 		pong.OnlinePlayers = manager.server.GetConnectedSessionCount()
 
-		pong.Encode()
-		manager.SendPacket(pong, session)
+		session.SendUnconnectedPacket(pong)
 
 	case *protocol.OpenConnectionRequest1:
 		if session.opening {
@@ -36,8 +35,7 @@ func (manager *SessionManager) HandleUnconnectedMessage(packetInterface protocol
 			response.Security = 1
 		}
 
-		response.Encode()
-		manager.SendPacket(response, session)
+		session.SendUnconnectedPacket(response)
 
 	case *protocol.OpenConnectionRequest2:
 		var response = protocol.NewOpenConnectionResponse2()
@@ -54,10 +52,9 @@ func (manager *SessionManager) HandleUnconnectedMessage(packetInterface protocol
 			response.Security = 1
 		}
 
-		response.Encode()
-		manager.SendPacket(response, session)
-		session.Open()
+		session.SendUnconnectedPacket(response)
 
+		session.Open()
 		session.opening = false
 	}
 }
