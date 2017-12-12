@@ -23,8 +23,10 @@ func (manager *SessionManager) HandleAck(ack *protocol.ACK, session *Session) {
 
 func (manager *SessionManager) HandleNak(nak *protocol.NAK, session *Session) {
 	var datagrams = session.recoveryQueue.Recover(nak.Packets)
+	println("Got NAK")
 	for _, datagram := range datagrams {
-		session.SendConnectedPacket(datagram, protocol.ReliabilityReliableOrdered, PriorityHigh)
+		datagram.ResetStream()
+		manager.SendPacket(datagram, session)
 	}
 }
 

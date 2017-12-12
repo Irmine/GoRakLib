@@ -26,7 +26,6 @@ func (queue *RecoveryQueue) Recover(sequenceNumbers []uint32) []*protocol.Datagr
 	for _, sequenceNum := range sequenceNumbers {
 		if queue.CanBeRecovered(sequenceNum) {
 			datagrams = append(datagrams, queue.recoveryMap[sequenceNum])
-			delete(queue.recoveryMap, sequenceNum)
 		}
 	}
 	return datagrams
