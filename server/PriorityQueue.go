@@ -44,6 +44,7 @@ func (queue *PriorityQueue) AddEncapsulatedToQueue(packet *protocol.Encapsulated
 			split, buffer = buffer[:maximumEncapsulatedSize], buffer[maximumEncapsulatedSize:]
 			splitBuffers = append(splitBuffers, split)
 		}
+		splitBuffers = append(splitBuffers, buffer)
 
 		var splitId = queue.session.splitId % math.MaxInt16
 		queue.session.splitId++
