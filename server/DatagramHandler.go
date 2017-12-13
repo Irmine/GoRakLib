@@ -25,7 +25,7 @@ func (manager *SessionManager) HandleNak(nak *protocol.NAK, session *Session) {
 	var datagrams = session.recoveryQueue.Recover(nak.Packets)
 	for _, datagram := range datagrams {
 		datagram.ResetStream()
-		manager.SendPacket(datagram, session)
+		manager.server.udp.WriteBuffer(datagram.GetBuffer(), session.GetAddress(), session.GetPort())
 	}
 }
 
@@ -110,7 +110,7 @@ func (manager *SessionManager) HandleSplitEncapsulated(packet *protocol.Encapsul
 
 		for len(session.splits[id]) != 0 {
 			pk := <-session.splits[id]
-			packets[pk.SplitIndex - session.lastSplitSize] = pk
+			packets[pk.SplitIndex] = pk
 		}
 
 		for _, pk := range packets {

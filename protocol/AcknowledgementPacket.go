@@ -85,8 +85,8 @@ func (packet *AcknowledgementPacket) Decode() {
 
 	for i := int16(0); i < packetCount && !packet.Feof() && count < 4096; i++ {
 		if packet.GetByte() == 0 {
-			var start = packet.GetLittleTriad()
-			var end = packet.GetLittleTriad()
+			var start = packet.GetTriad()
+			var end = packet.GetTriad()
 
 			if (end - start) > 512 {
 				end = start + 512
@@ -98,7 +98,7 @@ func (packet *AcknowledgementPacket) Decode() {
 			}
 
 		} else {
-			packet.Packets = append(packet.Packets, packet.GetLittleTriad())
+			packet.Packets = append(packet.Packets, packet.GetTriad())
 			count++
 		}
 	}

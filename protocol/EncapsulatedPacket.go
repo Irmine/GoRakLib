@@ -52,11 +52,11 @@ func (packet *EncapsulatedPacket) GetFromBinary(stream *Datagram) (*Encapsulated
 	}
 
 	if packet.IsReliable() {
-		packet.MessageIndex = stream.GetLittleTriad()
+		packet.MessageIndex = stream.GetTriad()
 	}
 
 	if packet.IsSequenced() {
-		packet.OrderIndex = stream.GetLittleTriad()
+		packet.OrderIndex = stream.GetTriad()
 		packet.OrderChannel = stream.GetByte()
 	}
 
@@ -66,12 +66,6 @@ func (packet *EncapsulatedPacket) GetFromBinary(stream *Datagram) (*Encapsulated
 		packet.SplitIndex = uint(stream.GetInt())
 	}
 
-	var diff = len(stream.Buffer) - packet.Offset
-	if diff < int(packet.Length) {
-		println("Packet ID:", stream.Buffer[packet.Offset + 1])
-		println("Bytes left:", diff, "Need:", packet.Length)
-		println("Has split:", packet.HasSplit)
-	}
 	packet.SetBuffer(stream.Get(int(packet.Length)))
 
 	return packet, nil
@@ -84,7 +78,7 @@ func (packet *EncapsulatedPacket) Encode() {
 	if packet.HasSplit {
 		splitValue = SplitFlag
 	}
-	packet.SetBuffer([]byte{})
+	packet.ResetStream()
 
 	packet.PutByte(byte((packet.Reliability << 5) | byte(splitValue)))
 

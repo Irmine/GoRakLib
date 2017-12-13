@@ -23,7 +23,9 @@ type Datagram struct {
 }
 
 func NewDatagram() *Datagram {
-	return &Datagram{NewPacket(0), false, false, false, 0, &[]*EncapsulatedPacket{}}
+	var datagram = &Datagram{NewPacket(0), false, false, false, 0, &[]*EncapsulatedPacket{}}
+	datagram.ResetStream()
+	return datagram
 }
 
 func (datagram *Datagram) GetPackets() *[]*EncapsulatedPacket {

@@ -50,6 +50,7 @@ func (queue *PriorityQueue) AddEncapsulatedToQueue(packet *protocol.Encapsulated
 
 		for index, splitBuffer := range splitBuffers {
 			encapsulated := protocol.NewEncapsulatedPacket()
+			encapsulated.ResetStream()
 
 			encapsulated.HasSplit = true
 			encapsulated.SplitId = splitId
@@ -58,6 +59,9 @@ func (queue *PriorityQueue) AddEncapsulatedToQueue(packet *protocol.Encapsulated
 
 			encapsulated.Reliability = packet.Reliability
 			encapsulated.MessageIndex = packet.MessageIndex + uint32(index)
+			if index != 0 {
+				queue.session.messageIndex++
+			}
 
 			encapsulated.Buffer = splitBuffer
 
@@ -65,8 +69,8 @@ func (queue *PriorityQueue) AddEncapsulatedToQueue(packet *protocol.Encapsulated
 			encapsulated.OrderIndex = packet.OrderIndex
 
 			queue.AddToQueue(encapsulated, priority)
-			return
 		}
+		return
 	}
 
 	queue.AddToQueue(packet, priority)
