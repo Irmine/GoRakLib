@@ -5,7 +5,7 @@ import (
 	"math"
 )
 
-func Read(buffer *[]byte, offset *int, length int) ([]byte) {
+func Read(buffer *[]byte, offset *int, length int) []byte {
 	bytes := make([]byte, 0)
 	if *offset >= len(*buffer) {
 		fmt.Printf("An error occurred: %v", "no bytes left to read")
@@ -43,7 +43,7 @@ func WriteBool(buffer *[]byte, bool bool) {
 	WriteByte(buffer, 0x00)
 }
 
-func ReadBool(buffer *[]byte, offset *int) (bool) {
+func ReadBool(buffer *[]byte, offset *int) bool {
 	out := Read(buffer, offset, 1)
 	return out[0] != 0x00
 }
@@ -61,7 +61,7 @@ func WriteUnsignedByte(buffer *[]byte, unsigned uint8) {
 	WriteByte(buffer, byte(unsigned))
 }
 
-func ReadUnsignedByte(buffer *[]byte, offset *int) (byte) {
+func ReadUnsignedByte(buffer *[]byte, offset *int) byte {
 	out := Read(buffer, offset, 1)
 	return byte(out[0])
 }
@@ -108,7 +108,7 @@ func WriteUnsignedShort(buffer *[]byte, int uint16) {
 	}
 }
 
-func ReadUnsignedShort(buffer *[]byte, offset *int) (uint16) {
+func ReadUnsignedShort(buffer *[]byte, offset *int) uint16 {
 	var v uint
 	var i uint
 	var out int
@@ -138,7 +138,7 @@ func WriteInt(buffer *[]byte, int int32) {
 	}
 }
 
-func ReadInt(buffer *[]byte, offset *int) (int32) {
+func ReadInt(buffer *[]byte, offset *int) int32 {
 	var v uint
 	var i uint
 	var out int
@@ -168,7 +168,7 @@ func WriteLong(buffer *[]byte, int int64) {
 	}
 }
 
-func ReadLong(buffer *[]byte, offset *int) (int64) {
+func ReadLong(buffer *[]byte, offset *int) int64 {
 	var v uint
 	var i uint
 	var out int
@@ -198,7 +198,7 @@ func WriteUnsignedLong(buffer *[]byte, int uint64) {
 	}
 }
 
-func ReadUnsignedLong(buffer *[]byte, offset *int) (uint64) {
+func ReadUnsignedLong(buffer *[]byte, offset *int) uint64 {
 	var v uint
 	var i uint
 	var out int
@@ -229,7 +229,7 @@ func WriteFloat(buffer *[]byte, float float32) {
 	}
 }
 
-func ReadFloat(buffer *[]byte, offset *int) (float32) {
+func ReadFloat(buffer *[]byte, offset *int) float32 {
 	var v uint
 	var i uint
 	var out uint32
@@ -260,7 +260,7 @@ func WriteDouble(buffer *[]byte, double float64) {
 	}
 }
 
-func ReadDouble(buffer *[]byte, offset *int) (float64) {
+func ReadDouble(buffer *[]byte, offset *int) float64 {
 	var v uint
 	var i uint
 	var out uint64
@@ -289,7 +289,7 @@ func WriteLittleShort(buffer *[]byte, short int16) {
 	}
 }
 
-func ReadLittleShort(buffer *[]byte, offset *int) (int16) {
+func ReadLittleShort(buffer *[]byte, offset *int) int16 {
 	var v uint
 	var i uint
 	var out int
@@ -316,7 +316,7 @@ func WriteLittleUnsignedShort(buffer *[]byte, short uint16) {
 	}
 }
 
-func ReadLittleUnsignedShort(buffer *[]byte, offset *int) (uint16) {
+func ReadLittleUnsignedShort(buffer *[]byte, offset *int) uint16 {
 	var v uint
 	var i uint
 	var out int
@@ -343,7 +343,7 @@ func WriteLittleInt(buffer *[]byte, int int32) {
 	}
 }
 
-func ReadLittleInt(buffer *[]byte, offset *int) (int32) {
+func ReadLittleInt(buffer *[]byte, offset *int) int32 {
 	var v uint
 	var i uint
 	var out int
@@ -370,7 +370,7 @@ func WriteLittleLong(buffer *[]byte, int int64) {
 	}
 }
 
-func ReadLittleLong(buffer *[]byte, offset *int) (int64) {
+func ReadLittleLong(buffer *[]byte, offset *int) int64 {
 	var v uint
 	var i uint
 	var out int
@@ -397,7 +397,7 @@ func WriteLittleUnsignedLong(buffer *[]byte, int uint64) {
 	}
 }
 
-func ReadLittleUnsignedLong(buffer *[]byte, offset *int) (uint64) {
+func ReadLittleUnsignedLong(buffer *[]byte, offset *int) uint64 {
 	var v uint
 	var i uint
 	var out int
@@ -425,7 +425,7 @@ func WriteLittleFloat(buffer *[]byte, f float32) {
 	}
 }
 
-func ReadLittleFloat(buffer *[]byte, offset *int) (float32) {
+func ReadLittleFloat(buffer *[]byte, offset *int) float32 {
 	var v uint
 	var i uint
 	var out uint32
@@ -453,7 +453,7 @@ func WriteLittleDouble(buffer *[]byte, double float64) {
 	}
 }
 
-func ReadLittleDouble(buffer *[]byte, offset *int) (float64) {
+func ReadLittleDouble(buffer *[]byte, offset *int) float64 {
 	var v uint
 	var i uint
 	var out uint64
@@ -480,7 +480,7 @@ func WriteString(buffer *[]byte, string string) {
 	}
 }
 
-func ReadString(buffer *[]byte, offset *int) (string) {
+func ReadString(buffer *[]byte, offset *int) string {
 	bytes := Read(buffer, offset, int(ReadShort(buffer, offset)))
 	return string(bytes)
 }
@@ -488,27 +488,25 @@ func ReadString(buffer *[]byte, offset *int) (string) {
 func ReadBigEndianTriad(buffer *[]byte, offset *int) uint32 {
 	var out uint32
 	var bytes = Read(buffer, offset, 3)
-	out = uint32(bytes[0] | (bytes[1] << 8) | (bytes[2] << 16))
-
-	return out
-}
-
-func WriteBigEndianTriad(buffer *[]byte, uint uint32) {
-	Write(buffer, byte(uint & 0xFF))
-	Write(buffer, byte(uint >> 8 & 0xFF))
-	Write(buffer, byte(uint >> 16))
-}
-
-func ReadLittleEndianTriad(buffer *[]byte, offset *int) uint32 {
-	var out uint32
-	var bytes = Read(buffer, offset, 3)
-	out = uint32(bytes[2] | (bytes[1] << 8) | (bytes[0] << 16))
+	out = (uint32(bytes[2]) & 0xFF) | ((uint32(bytes[1]) & 0xFF) << 8) | ((uint32(bytes[0]) & 0x0F) << 16)
 
 	return out
 }
 
 func WriteLittleEndianTriad(buffer *[]byte, uint uint32) {
-	Write(buffer, byte(uint >> 16))
-	Write(buffer, byte(uint >> 8 & 0xFF))
+	Write(buffer, byte(uint & 0xFF))
+	Write(buffer, byte(uint >> 8) & 0xFF)
+	Write(buffer, byte(uint >> 16) & 0xFF)
+}
+
+func ReadLittleEndianTriad(buffer *[]byte, offset *int) uint32 {
+	var bytes = Read(buffer, offset, 3)
+
+	return (uint32(bytes[0]) & 0xFF) | ((uint32(bytes[1]) & 0xFF) << 8) | ((uint32(bytes[2]) & 0x0F) << 16)
+}
+
+func WriteBigEndianTriad(buffer *[]byte, uint uint32) {
+	Write(buffer, byte(uint >> 16) & 0xFF)
+	Write(buffer, byte(uint >> 8) & 0xFF)
 	Write(buffer, byte(uint & 0xFF))
 }

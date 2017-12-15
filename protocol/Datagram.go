@@ -46,7 +46,7 @@ func (datagram *Datagram) Encode() {
 	}
 
 	datagram.PutByte(byte(flags))
-	datagram.PutTriad(datagram.SequenceNumber)
+	datagram.PutLittleTriad(datagram.SequenceNumber)
 
 	for _, packet := range *datagram.GetPackets() {
 		packet.Encode()
@@ -60,7 +60,7 @@ func (datagram *Datagram) Decode() {
 	datagram.ContinuousSend = (flags & BitFlagContinuousSend) != 0
 	datagram.NeedsBAndAs = (flags & BitFlagNeedsBAndAs) != 0
 
-	datagram.SequenceNumber = datagram.GetTriad()
+	datagram.SequenceNumber = datagram.GetLittleTriad()
 
 	for !datagram.Feof() {
 		packet := NewEncapsulatedPacket()

@@ -15,6 +15,8 @@ func (manager *SessionManager) HandleDatagram(datagram *protocol.Datagram, sessi
 	ack.Packets = []uint32{datagram.SequenceNumber}
 	manager.SendPacket(ack, session)
 
+	println(datagram.SequenceNumber)
+
 	for _, packet := range *datagram.GetPackets() {
 		manager.HandleEncapsulated(packet, session)
 	}

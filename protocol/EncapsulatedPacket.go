@@ -52,11 +52,11 @@ func (packet *EncapsulatedPacket) GetFromBinary(stream *Datagram) (*Encapsulated
 	}
 
 	if packet.IsReliable() {
-		packet.MessageIndex = stream.GetTriad()
+		packet.MessageIndex = stream.GetLittleTriad()
 	}
 
 	if packet.IsSequenced() {
-		packet.OrderIndex = stream.GetTriad()
+		packet.OrderIndex = stream.GetLittleTriad()
 		packet.OrderChannel = stream.GetByte()
 	}
 
@@ -85,10 +85,10 @@ func (packet *EncapsulatedPacket) Encode() {
 	packet.PutShort(int16(len(buffer) << 3))
 
 	if packet.IsReliable() {
-		packet.PutTriad(packet.MessageIndex)
+		packet.PutLittleTriad(packet.MessageIndex)
 	}
 	if packet.IsSequenced() {
-		packet.PutTriad(packet.OrderIndex)
+		packet.PutLittleTriad(packet.OrderIndex)
 		packet.PutByte(packet.OrderChannel)
 	}
 
