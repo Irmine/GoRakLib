@@ -107,38 +107,6 @@ func (stream *BinaryStream) GetDouble() float64 {
 	return ReadDouble(&stream.Buffer, &stream.Offset)
 }
 
-func (stream *BinaryStream) PutVarInt(v int32) {
-	WriteVarInt(&stream.Buffer, v)
-}
-
-func (stream *BinaryStream) GetVarInt() int32 {
-	return ReadVarInt(&stream.Buffer, &stream.Offset)
-}
-
-func (stream *BinaryStream) PutVarLong(v int64) {
-	WriteVarLong(&stream.Buffer, v)
-}
-
-func (stream *BinaryStream) GetVarLong() int64 {
-	return ReadVarLong(&stream.Buffer, &stream.Offset)
-}
-
-func (stream *BinaryStream) PutUnsignedVarInt(v uint32) {
-	WriteUnsignedVarInt(&stream.Buffer, v)
-}
-
-func (stream *BinaryStream) GetUnsignedVarInt() uint32 {
-	return ReadUnsignedVarInt(&stream.Buffer, &stream.Offset)
-}
-
-func (stream *BinaryStream) PutUnsignedVarLong(v uint64) {
-	WriteUnsignedVarLong(&stream.Buffer, v)
-}
-
-func (stream *BinaryStream) GetUnsignedVarLong() uint64 {
-	return ReadUnsignedVarLong(&stream.Buffer, &stream.Offset)
-}
-
 func (stream *BinaryStream) PutString(v string) {
 	WriteString(&stream.Buffer, v)
 }
@@ -201,14 +169,6 @@ func (stream *BinaryStream) PutLittleDouble(v float64) {
 
 func (stream *BinaryStream) GetLittleDouble() float64 {
 	return ReadDouble(&stream.Buffer, &stream.Offset)
-}
-
-func (stream *BinaryStream) PutPosition(x, y, z int) {
-	WritePosition(&stream.Buffer, x, y, z)
-}
-
-func (stream *BinaryStream) GetPosition() (int, int, int) {
-	return ReadPosition(&stream.Buffer, &stream.Offset)
 }
 
 func (stream *BinaryStream) PutTriad(v uint32) {

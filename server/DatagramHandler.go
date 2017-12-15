@@ -6,10 +6,13 @@ import (
 	"fmt"
 )
 
+const (
+	MinecraftHeader = 0xFE
+)
+
 func (manager *SessionManager) HandleDatagram(datagram *protocol.Datagram, session *Session) {
 	var ack = protocol.NewACK()
 	ack.Packets = []uint32{datagram.SequenceNumber}
-	ack.Encode()
 	manager.SendPacket(ack, session)
 
 	for _, packet := range *datagram.GetPackets() {
@@ -24,7 +27,6 @@ func (manager *SessionManager) HandleAck(ack *protocol.ACK, session *Session) {
 func (manager *SessionManager) HandleNak(nak *protocol.NAK, session *Session) {
 	var datagrams = session.recoveryQueue.Recover(nak.Packets)
 	for _, datagram := range datagrams {
-		datagram.ResetStream()
 		manager.server.udp.WriteBuffer(datagram.GetBuffer(), session.GetAddress(), session.GetPort())
 	}
 }
@@ -51,7 +53,7 @@ func (manager *SessionManager) HandleEncapsulated(packet *protocol.EncapsulatedP
 		var pongTime = uint64(manager.server.GetRunTime())
 		accept.PongSendTime = pongTime
 
-		session.SendConnectedPacket(accept, protocol.ReliabilityUnreliable, PriorityImmediate)
+		session.SendConnectedPacket(accept, protocol.ReliabilityReliableOrdered, PriorityImmediate)
 
 		session.SetPing(pongTime - request.PingSendTime)
 
@@ -85,7 +87,13 @@ func (manager *SessionManager) HandleEncapsulated(packet *protocol.EncapsulatedP
 
 		session.SetPing(ping)
 
-	case 0xFE:
+	case identifiers.DisconnectNotification:
+		session.Close()
+
+	case MinecraftHeader:
+		if !session.IsConnected() {
+			return
+		}
 		session.AddProcessedEncapsulatedPacket(*packet)
 
 	default:

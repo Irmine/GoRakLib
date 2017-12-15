@@ -3,6 +3,9 @@ package server
 import "goraklib/protocol"
 
 func (manager *SessionManager) HandleUnconnectedMessage(packetInterface protocol.IPacket, session *Session) {
+	if session.IsOpened() {
+		return
+	}
 	switch packet := packetInterface.(type) {
 	case *protocol.UnconnectedPing:
 		var pong = protocol.NewUnconnectedPong()

@@ -23,6 +23,12 @@ func NewPriorityQueue(session *Session) *PriorityQueue {
 	return &PriorityQueue{session, make(chan *protocol.EncapsulatedPacket, 16), make(chan *protocol.EncapsulatedPacket, 16), make(chan *protocol.EncapsulatedPacket, 16)}
 }
 
+func (queue *PriorityQueue) Wipe() {
+	queue.Low = make(chan *protocol.EncapsulatedPacket, 16)
+	queue.Medium = make(chan *protocol.EncapsulatedPacket, 16)
+	queue.High = make(chan *protocol.EncapsulatedPacket, 16)
+}
+
 func (queue *PriorityQueue) AddEncapsulatedToQueue(packet *protocol.EncapsulatedPacket, priority byte) {
 	if packet.IsReliable() {
 		packet.MessageIndex = queue.session.messageIndex

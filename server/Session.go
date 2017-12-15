@@ -17,6 +17,7 @@ type Session struct {
 	opening bool
 	opened bool
 	connected bool
+	closed bool
 
 	currentSequenceNumber uint32
 	mtuSize int16
@@ -89,12 +90,21 @@ func (session *Session) Open() {
 }
 
 func (session *Session) Close() {
-	session.opened = false
-	session.SetConnected(false)
+	session.queue.Wipe()
+
+	session.closed = true
 }
 
 func (session *Session) IsOpened() bool {
 	return session.opened
+}
+
+func (session *Session) IsClosed() bool {
+	return session.closed
+}
+
+func (session *Session) IsReadyForDeletion() bool {
+	return session.closed && session.recoveryQueue.IsClear()
 }
 
 func (session *Session) SetConnected(value bool) {

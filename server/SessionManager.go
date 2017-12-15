@@ -39,13 +39,18 @@ func (manager *SessionManager) GetSession(address string, port uint16) (*Session
 }
 
 func (manager *SessionManager) Tick() {
-	for _, session := range manager.sessions {
-		go func() {
+	for index, session := range manager.sessions {
+		go func(session *Session) {
+			if session.IsReadyForDeletion() {
+				delete(manager.sessions, index)
+				return
+			}
+
 			for !session.IsStackEmpty() {
 				packet := session.FetchFromStack()
 				if packet.HasMagic() {
 					manager.HandleUnconnectedMessage(packet, session)
-				} else {
+				} else if session.IsOpened() {
 					if datagram, ok := packet.(*protocol.Datagram); ok {
 						manager.HandleDatagram(datagram, session)
 					} else if nak, ok := packet.(*protocol.NAK); ok {
@@ -56,7 +61,7 @@ func (manager *SessionManager) Tick() {
 				}
 			}
 			session.queue.Flush()
-		}()
+		}(session)
 	}
 }
 

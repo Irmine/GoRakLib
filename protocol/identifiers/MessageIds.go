@@ -9,7 +9,6 @@ const (
 
 	OpenConnectionRequest1 = 0x05
 	OpenConnectionResponse1 = 0x06
-
 	OpenConnectionRequest2 = 0x07
 	OpenConnectionResponse2 = 0x08
 
@@ -17,4 +16,6 @@ const (
 	ConnectionAccept = 0x10
 
 	NewIncomingConnection = 0x13
+
+	DisconnectNotification = 0x15
 )

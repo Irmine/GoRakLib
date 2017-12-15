@@ -36,3 +36,7 @@ func (queue *RecoveryQueue) FlagForDeletion(sequenceNumbers []uint32) {
 		delete(queue.recoveryMap, sequenceNum)
 	}
 }
+
+func (queue *RecoveryQueue) IsClear() bool {
+	return len(queue.recoveryMap) == 0
+}
