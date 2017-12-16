@@ -98,6 +98,7 @@ func (manager *SessionManager) HandleEncapsulated(packet *protocol.EncapsulatedP
 
 	default:
 		fmt.Println("Unknown encapsulated packet:", packet.Buffer[0])
+		session.AddProcessedEncapsulatedPacket(*packet)
 	}
 }
 
