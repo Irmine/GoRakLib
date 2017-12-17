@@ -33,8 +33,6 @@ type Session struct {
 
 	orderIndex map[byte]uint32
 	messageIndex uint32
-
-	lastSplitSize uint
 	splitId int16
 }
 

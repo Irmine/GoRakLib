@@ -126,8 +126,6 @@ func (manager *SessionManager) HandleSplitEncapsulated(packet *protocol.Encapsul
 			newPacket.PutBytes(pk.Buffer)
 		}
 
-		session.lastSplitSize = packet.SplitCount - 1
-
 		manager.HandleEncapsulated(newPacket, session)
 
 		delete(session.splits, id)
