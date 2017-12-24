@@ -10,13 +10,13 @@ type OpenConnectionResponse2 struct {
 	MtuSize int16
 	ClientAddress string
 	ClientPort uint16
-	Security byte
+	UseEncryption bool
 }
 
 func NewOpenConnectionResponse2() *OpenConnectionResponse2 {
 	return &OpenConnectionResponse2{NewUnconnectedMessage(NewPacket(
 		identifiers.OpenConnectionResponse2,
-	)), 0, 0, "", 0, 0}
+	)), 0, 0, "", 0, false}
 }
 
 func (response *OpenConnectionResponse2) Encode() {
@@ -25,7 +25,7 @@ func (response *OpenConnectionResponse2) Encode() {
 	response.PutLong(response.ServerId)
 	response.PutAddress(response.ClientAddress, response.ClientPort, 4)
 	response.PutShort(response.MtuSize)
-	response.PutByte(response.Security)
+	response.PutBool(response.UseEncryption)
 }
 
 func (response *OpenConnectionResponse2) Decode() {
@@ -34,6 +34,6 @@ func (response *OpenConnectionResponse2) Decode() {
 	response.ServerId = response.GetLong()
 	response.ClientAddress, response.ClientPort, _ = response.GetAddress()
 	response.MtuSize = response.GetShort()
-	response.Security = response.GetByte()
+	response.UseEncryption = response.GetBool()
 }
 

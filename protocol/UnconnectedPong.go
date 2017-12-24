@@ -32,17 +32,22 @@ func (pong *UnconnectedPong) Encode() {
 	pong.PutLong(pong.PingTime)
 	pong.PutLong(pong.ServerId)
 	pong.PutMagic()
-	pong.PutString(
-		"MCPE;" +
-		pong.ServerName + ";" +
-		strconv.Itoa(int(pong.ServerProtocol)) + ";" +
-		pong.ServerVersion + ";" +
-		strconv.Itoa(int(pong.OnlinePlayers)) + ";" +
-		strconv.Itoa(int(pong.MaximumPlayers)) + ";" +
-		strconv.Itoa(int(pong.ServerId)) + ";" +
-		pong.Motd + ";" +
-		pong.DefaultGameMode + ";",
-	)
+
+	if pong.ServerData == "" {
+		pong.PutString(
+			"MCPE;" +
+				pong.Motd + ";" +
+				strconv.Itoa(int(pong.ServerProtocol)) + ";" +
+				pong.ServerVersion + ";" +
+				strconv.Itoa(int(pong.OnlinePlayers)) + ";" +
+				strconv.Itoa(int(pong.MaximumPlayers)) + ";" +
+				strconv.Itoa(int(pong.ServerId)) + ";" +
+				pong.ServerName + ";" +
+				pong.DefaultGameMode + ";",
+		)
+	} else {
+		pong.PutString(pong.ServerData)
+	}
 }
 
 func (pong *UnconnectedPong) Decode() {

@@ -4,6 +4,7 @@ import (
 	"goraklib/protocol"
 	"goraklib/protocol/identifiers"
 	"fmt"
+	"encoding/hex"
 )
 
 const (
@@ -16,11 +17,12 @@ func (client *GoRakLibClient) HandleDatagram(datagram *protocol.Datagram) {
 	client.SendPacket(ack)
 
 	for _, packet := range *datagram.GetPackets() {
-		client.HandleEncapsulated(packet, client)
+		client.HandleEncapsulated(packet)
 	}
 }
 
 func (client *GoRakLibClient) HandleAck(ack *protocol.ACK) {
+	fmt.Println(hex.EncodeToString(ack.GetBuffer()))
 	client.recoveryQueue.FlagForDeletion(ack.Packets)
 }
 
@@ -33,36 +35,26 @@ func (client *GoRakLibClient) HandleNak(nak *protocol.NAK) {
 
 func (client *GoRakLibClient) HandleEncapsulated(packet *protocol.EncapsulatedPacket) {
 	if packet.HasSplit {
-		client.HandleSplitEncapsulated(packet, client)
+		client.HandleSplitEncapsulated(packet)
 		return
 	}
 
 	switch packet.Buffer[0] {
-	case identifiers.ConnectionRequest:
-		var request = protocol.NewConnectionRequest()
-		request.Buffer = packet.GetBuffer()
-		request.Decode()
+	case identifiers.ConnectionAccept:
+		println(hex.EncodeToString(packet.Buffer))
 
-		client.clientId = request.ClientId
+		var incoming = protocol.NewNewIncomingConnection()
+		incoming.ServerPort = client.connectionPort
+		incoming.ServerAddress = client.connectionAddress
 
-		var accept = protocol.NewConnectionAccept()
-		accept.ClientAddress = client.GetAddress()
-		accept.ClientPort = client.GetPort()
+		for i := 0; i < 20; i++ {
+			incoming.SystemAddresses = append(incoming.SystemAddresses, "0.0.0.0")
+			incoming.SystemPorts = append(incoming.SystemPorts, 0)
+			incoming.SystemIdVersions = append(incoming.SystemIdVersions, 4)
+		}
 
-		accept.PingSendTime = request.PingSendTime
-		var pongTime = uint64(client.server.GetRunTime())
-		accept.PongSendTime = pongTime
-
-		client.SendConnectedPacket(accept, protocol.ReliabilityReliableOrdered, PriorityImmediate)
-
-		client.SetPing(pongTime - request.PingSendTime)
-
-	case identifiers.NewIncomingConnection:
-		var connection = protocol.NewNewIncomingConnection()
-		connection.Buffer = packet.Buffer
-		connection.Decode()
-
-		client.SetConnected(true)
+		client.online = true
+		client.SendConnectedPacket(incoming, protocol.ReliabilityUnreliable, PriorityHigh)
 
 	case identifiers.ConnectedPing:
 		var ping = protocol.NewConnectedPing()
@@ -71,8 +63,7 @@ func (client *GoRakLibClient) HandleEncapsulated(packet *protocol.EncapsulatedPa
 
 		var pong = protocol.NewConnectedPong()
 		pong.PingSendTime = ping.PingSendTime
-		var pongTime = client.server.GetRunTime()
-		pong.PongSendTime = pongTime
+		pong.PongSendTime = 0
 
 		client.SendConnectedPacket(pong, protocol.ReliabilityUnreliable, PriorityLow)
 
@@ -83,22 +74,22 @@ func (client *GoRakLibClient) HandleEncapsulated(packet *protocol.EncapsulatedPa
 		pong.Buffer = packet.Buffer
 		pong.Decode()
 
-		ping := uint64(client.server.GetRunTime() - pong.PingSendTime)
+		//ping := uint64(client.server.GetRunTime() - pong.PingSendTime)
 
-		client.SetPing(ping)
+		//client.SetPing(ping)
 
 	case identifiers.DisconnectNotification:
 		client.Disconnect()
 
 	case MinecraftHeader:
-		if !client.IsConnected() {
+		/*if !client.IsConnected() {
 			return
 		}
-		client.AddProcessedEncapsulatedPacket(*packet)
+		client.AddProcessedEncapsulatedPacket(*packet)*/
 
 	default:
 		fmt.Println("Unknown encapsulated packet:", packet.Buffer[0])
-		client.AddProcessedEncapsulatedPacket(*packet)
+		//client.AddProcessedEncapsulatedPacket(*packet)
 	}
 }
 
@@ -136,6 +127,6 @@ func (client *GoRakLibClient) SendPing() {
 	var ping = protocol.NewConnectedPing()
 	ping.PingSendTime = 0
 
-	client.SendConnectedPacket(ping, protocol.ReliabilityUnreliable, PriorityMedium)
+	//client.SendConnectedPacket(ping, protocol.ReliabilityUnreliable, PriorityMedium)
 }
 

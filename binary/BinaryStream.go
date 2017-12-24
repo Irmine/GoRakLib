@@ -188,9 +188,8 @@ func (stream *BinaryStream) GetLittleTriad() uint32 {
 }
 
 func (stream *BinaryStream) PutBytes(bytes []byte) {
-	for _, byte2 := range bytes {
-		stream.PutByte(byte2)
-	}
+	stream.Buffer = append(stream.Buffer, bytes...)
+	stream.Offset += len(bytes)
 }
 
 func (stream *BinaryStream) ResetStream() {

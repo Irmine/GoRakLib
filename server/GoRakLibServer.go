@@ -19,6 +19,7 @@ type GoRakLibServer struct {
 	minecraftProtocol uint
 	minecraftVersion string
 	security bool
+	useEncryption bool
 
 	startingTime int64
 }
@@ -136,6 +137,14 @@ func (server *GoRakLibServer) SetSecurity(value bool) {
 
 func (server *GoRakLibServer) IsSecure() bool {
 	return server.security
+}
+
+func (server *GoRakLibServer) UsesEncryption() bool {
+	return server.useEncryption
+}
+
+func (server *GoRakLibServer) SetEncryption(value bool) {
+	server.useEncryption = value
 }
 
 func (server *GoRakLibServer) Tick() {
