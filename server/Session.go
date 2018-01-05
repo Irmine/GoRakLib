@@ -1,9 +1,9 @@
 package server
 
 import (
-	"fmt"
 	"strconv"
 	"goraklib/protocol"
+	"time"
 )
 
 type Session struct {
@@ -33,16 +33,22 @@ type Session struct {
 	orderIndex map[byte]uint32
 	messageIndex uint32
 	splitId int16
+
+	LastUpdate int64
+
+	forceClose bool
+	timeoutTick int
 }
 
 func NewSession(manager *SessionManager, address string, port uint16) *Session {
 	var session = &Session{recoveryQueue: NewRecoveryQueue(), orderIndex: make(map[byte]uint32), manager: manager, address: address, port: port, opened: false, connected: false, splits: make(map[int]chan *protocol.EncapsulatedPacket), packets: make(chan protocol.IPacket, 20), packetBatches: make(chan protocol.EncapsulatedPacket, 512), currentSequenceNumber: 1}
 	session.queue = NewPriorityQueue(session)
-	fmt.Println("Session created for ip:", session)
+	session.LastUpdate = time.Now().Unix()
 	return session
 }
 
 func (session *Session) SendUnconnectedPacket(packet protocol.IPacket) {
+	session.LastUpdate = time.Now().Unix()
 	packet.Encode()
 
 	session.manager.server.udp.WriteBuffer(packet.GetBuffer(), session.GetAddress(), session.GetPort())
@@ -86,10 +92,14 @@ func (session *Session) Open() {
 	session.opened = true
 }
 
-func (session *Session) Close() {
+func (session *Session) Close(force bool) {
 	session.queue.Wipe()
 
 	session.closed = true
+	if force {
+		session.forceClose = true
+	}
+	session.timeoutTick++
 }
 
 func (session *Session) IsOpened() bool {
@@ -101,7 +111,7 @@ func (session *Session) IsClosed() bool {
 }
 
 func (session *Session) IsReadyForDeletion() bool {
-	return session.closed && session.recoveryQueue.IsClear()
+	return session.closed && (session.recoveryQueue.IsClear() || session.forceClose || session.timeoutTick > 20)
 }
 
 func (session *Session) SetConnected(value bool) {
@@ -113,6 +123,7 @@ func (session *Session) IsConnected() bool {
 }
 
 func (session *Session) Forward(packet protocol.IPacket) {
+	session.LastUpdate = time.Now().Unix()
 	packet.Decode()
 
 	session.packets <- packet

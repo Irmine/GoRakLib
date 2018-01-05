@@ -6,10 +6,6 @@ import (
 	"fmt"
 )
 
-const (
-	MinecraftHeader = 0xFE
-)
-
 func (manager *SessionManager) HandleDatagram(datagram *protocol.Datagram, session *Session) {
 	var ack = protocol.NewACK()
 	ack.Packets = []uint32{datagram.SequenceNumber}
@@ -88,16 +84,13 @@ func (manager *SessionManager) HandleEncapsulated(packet *protocol.EncapsulatedP
 		session.SetPing(ping)
 
 	case identifiers.DisconnectNotification:
-		session.Close()
-
-	case MinecraftHeader:
-		if !session.IsConnected() {
-			return
-		}
-		session.AddProcessedEncapsulatedPacket(*packet)
+		session.Close(true)
 
 	default:
-		fmt.Println("Unknown encapsulated packet:", packet.Buffer[0])
+		if !session.IsConnected() {
+			fmt.Println("Unknown encapsulated packet:", packet.Buffer[0])
+			return
+		}
 		session.AddProcessedEncapsulatedPacket(*packet)
 	}
 }
