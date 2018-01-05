@@ -21,7 +21,6 @@ type Session struct {
 	currentSequenceNumber uint32
 	mtuSize int16
 
-	packets chan protocol.IPacket
 	packetBatches chan protocol.EncapsulatedPacket
 
 	splits map[int]chan *protocol.EncapsulatedPacket
@@ -41,7 +40,7 @@ type Session struct {
 }
 
 func NewSession(manager *SessionManager, address string, port uint16) *Session {
-	var session = &Session{recoveryQueue: NewRecoveryQueue(), orderIndex: make(map[byte]uint32), manager: manager, address: address, port: port, opened: false, connected: false, splits: make(map[int]chan *protocol.EncapsulatedPacket), packets: make(chan protocol.IPacket, 20), packetBatches: make(chan protocol.EncapsulatedPacket, 512), currentSequenceNumber: 1}
+	var session = &Session{recoveryQueue: NewRecoveryQueue(), orderIndex: make(map[byte]uint32), manager: manager, address: address, port: port, opened: false, connected: false, splits: make(map[int]chan *protocol.EncapsulatedPacket), packetBatches: make(chan protocol.EncapsulatedPacket, 512), currentSequenceNumber: 1}
 	session.queue = NewPriorityQueue(session)
 	session.LastUpdate = time.Now().Unix()
 	return session
@@ -126,15 +125,7 @@ func (session *Session) Forward(packet protocol.IPacket) {
 	session.LastUpdate = time.Now().Unix()
 	packet.Decode()
 
-	session.packets <- packet
-}
-
-func (session *Session) IsStackEmpty() bool {
-	return len(session.packets) == 0
-}
-
-func (session *Session) FetchFromStack() protocol.IPacket {
-	return <- session.packets
+	session.manager.HandlePacket(packet, session)
 }
 
 func (session *Session) GetPort() uint16 {

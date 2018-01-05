@@ -56,26 +56,25 @@ func (manager *SessionManager) Tick() {
 				return
 			}
 
-			for !session.IsStackEmpty() {
-				packet := session.FetchFromStack()
-				if packet.HasMagic() {
-					manager.HandleUnconnectedMessage(packet, session)
-				} else if session.IsOpened() {
-					if datagram, ok := packet.(*protocol.Datagram); ok {
-						manager.HandleDatagram(datagram, session)
-					} else if nak, ok := packet.(*protocol.NAK); ok {
-						manager.HandleNak(nak, session)
-					} else if ack, ok := packet.(*protocol.ACK); ok {
-						manager.HandleAck(ack, session)
-					}
-				}
-			}
-
 			if session.IsClosed() {
 				return
 			}
 			session.queue.Flush()
 		}(session)
+	}
+}
+
+func (manager *SessionManager) HandlePacket(packet protocol.IPacket, session *Session) {
+	if packet.HasMagic() {
+		manager.HandleUnconnectedMessage(packet, session)
+	} else if session.IsOpened() {
+		if datagram, ok := packet.(*protocol.Datagram); ok {
+			manager.HandleDatagram(datagram, session)
+		} else if nak, ok := packet.(*protocol.NAK); ok {
+			manager.HandleNak(nak, session)
+		} else if ack, ok := packet.(*protocol.ACK); ok {
+			manager.HandleAck(ack, session)
+		}
 	}
 }
 
