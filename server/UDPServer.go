@@ -2,8 +2,6 @@ package server
 
 import (
 	"net"
-	"fmt"
-	"os"
 	"strconv"
 	"errors"
 	"goraklib/protocol"
@@ -14,7 +12,6 @@ type UDPServer struct {
 	address string
 	Conn *net.UDPConn
 	pool *PacketPool
-	packets []protocol.IPacket
 }
 
 func NewUDPServer(address string, port uint16) UDPServer {
@@ -34,8 +31,7 @@ func NewUDPServer(address string, port uint16) UDPServer {
 	conn, err := net.ListenUDP("udp", addr)
 
 	if err != nil {
-		fmt.Printf("An error has occurred: %v", err)
-		os.Exit(1)
+		panic(err)
 	}
 
 	server.Conn = conn
@@ -49,7 +45,7 @@ func (udp *UDPServer) GetPort() uint16 {
 }
 
 func (udp *UDPServer) ReadBuffer() (protocol.IPacket, string, uint16, error) {
-	var buffer = make([]byte, 8192)
+	var buffer = make([]byte, 4096)
 
 	n, addr, err := udp.Conn.ReadFromUDP(buffer)
 
@@ -58,7 +54,6 @@ func (udp *UDPServer) ReadBuffer() (protocol.IPacket, string, uint16, error) {
 	}
 
 	buffer = buffer[:n]
-
 	var packet protocol.IPacket
 
 	if n == 0 {
@@ -85,7 +80,6 @@ func (udp *UDPServer) WriteBuffer(buffer []byte, ip string, port uint16) {
 	_, err := udp.Conn.WriteToUDP(buffer, &addr)
 
 	if err != nil {
-		fmt.Printf("An error has occurred: %v", err)
-		os.Exit(1)
+		panic(err)
 	}
 }

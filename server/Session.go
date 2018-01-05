@@ -14,7 +14,6 @@ type Session struct {
 	address string
 	port uint16
 
-	opening bool
 	opened bool
 	connected bool
 	closed bool
@@ -33,8 +32,6 @@ type Session struct {
 
 	orderIndex map[byte]uint32
 	messageIndex uint32
-
-	lastSplitSize uint
 	splitId int16
 }
 

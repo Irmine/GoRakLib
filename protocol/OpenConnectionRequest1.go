@@ -20,7 +20,9 @@ func (request *OpenConnectionRequest1) Encode() {
 	request.EncodeId()
 	request.PutMagic()
 	request.PutByte(request.Protocol)
-	// TODO
+
+	var bytes = make([]byte, request.MtuSize + 18)
+	request.PutBytes(bytes)
 }
 
 func (request *OpenConnectionRequest1) Decode() {

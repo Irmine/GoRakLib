@@ -23,20 +23,12 @@ func (manager *SessionManager) HandleUnconnectedMessage(packetInterface protocol
 		session.SendUnconnectedPacket(pong)
 
 	case *protocol.OpenConnectionRequest1:
-		if session.opening {
-			return
-		}
-
-		session.opening = true
 		var response = protocol.NewOpenConnectionResponse1()
 
 		response.ServerId = manager.server.GetServerId()
 		response.MtuSize = packet.MtuSize
 
-		response.Security = 0
-		if manager.server.IsSecure() {
-			response.Security = 1
-		}
+		response.Security = manager.server.IsSecure()
 
 		session.SendUnconnectedPacket(response)
 
@@ -50,14 +42,10 @@ func (manager *SessionManager) HandleUnconnectedMessage(packetInterface protocol
 
 		session.mtuSize = response.MtuSize
 
-		response.Security = 0
-		if manager.server.IsSecure() {
-			response.Security = 1
-		}
+		response.UseEncryption = manager.server.useEncryption
 
 		session.SendUnconnectedPacket(response)
 
 		session.Open()
-		session.opening = false
 	}
 }
