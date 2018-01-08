@@ -23,7 +23,8 @@ type Session struct {
 
 	packetBatches chan protocol.EncapsulatedPacket
 
-	splits map[int]chan *protocol.EncapsulatedPacket
+	splits map[int][]*protocol.EncapsulatedPacket
+	splitCounts map[int]uint
 
 	clientId uint64
 
@@ -40,7 +41,7 @@ type Session struct {
 }
 
 func NewSession(manager *SessionManager, address string, port uint16) *Session {
-	var session = &Session{recoveryQueue: NewRecoveryQueue(), orderIndex: make(map[byte]uint32), manager: manager, address: address, port: port, opened: false, connected: false, splits: make(map[int]chan *protocol.EncapsulatedPacket), packetBatches: make(chan protocol.EncapsulatedPacket, 512), currentSequenceNumber: 1}
+	var session = &Session{splitCounts: make(map[int]uint), recoveryQueue: NewRecoveryQueue(), orderIndex: make(map[byte]uint32), manager: manager, address: address, port: port, opened: false, connected: false, splits: make(map[int][]*protocol.EncapsulatedPacket), packetBatches: make(chan protocol.EncapsulatedPacket, 512), currentSequenceNumber: 1}
 	session.queue = NewPriorityQueue(session)
 	session.LastUpdate = time.Now().Unix()
 	return session

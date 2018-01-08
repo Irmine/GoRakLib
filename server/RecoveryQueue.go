@@ -2,23 +2,22 @@ package server
 
 import (
 	"goraklib/protocol"
-	"sync"
 )
 
 type RecoveryQueue struct {
-	recoveryMap sync.Map
+	recoveryMap map[uint32]*protocol.Datagram
 }
 
 func NewRecoveryQueue() *RecoveryQueue {
-	return &RecoveryQueue{sync.Map{}}
+	return &RecoveryQueue{make(map[uint32]*protocol.Datagram)}
 }
 
 func (queue *RecoveryQueue) AddRecoveryFor(datagram *protocol.Datagram) {
-	queue.recoveryMap.Store(datagram.SequenceNumber, datagram)
+	queue.recoveryMap[datagram.SequenceNumber] = datagram
 }
 
 func (queue *RecoveryQueue) CanBeRecovered(sequenceNumber uint32) bool {
-	var _, canBeRecovered = queue.recoveryMap.Load(sequenceNumber)
+	var _, canBeRecovered = queue.recoveryMap[sequenceNumber]
 	return canBeRecovered
 }
 
@@ -26,8 +25,8 @@ func (queue *RecoveryQueue) Recover(sequenceNumbers []uint32) []*protocol.Datagr
 	var datagrams []*protocol.Datagram
 	for _, sequenceNum := range sequenceNumbers {
 		if queue.CanBeRecovered(sequenceNum) {
-			datagram, _ := queue.recoveryMap.Load(sequenceNum)
-			datagrams = append(datagrams, datagram.(*protocol.Datagram))
+			datagram, _ := queue.recoveryMap[sequenceNum]
+			datagrams = append(datagrams, datagram)
 		}
 	}
 	return datagrams
@@ -35,15 +34,10 @@ func (queue *RecoveryQueue) Recover(sequenceNumbers []uint32) []*protocol.Datagr
 
 func (queue *RecoveryQueue) FlagForDeletion(sequenceNumbers []uint32) {
 	for _, sequenceNum := range sequenceNumbers {
-		queue.recoveryMap.Delete(sequenceNum)
+		delete(queue.recoveryMap, sequenceNum)
 	}
 }
 
 func (queue *RecoveryQueue) IsClear() bool {
-	var count = 0
-	queue.recoveryMap.Range(func(key, value interface{}) bool {
-		count++
-		return true
-	})
-	return count == 0
+	return len(queue.recoveryMap) == 0
 }

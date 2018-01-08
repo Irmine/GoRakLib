@@ -99,28 +99,23 @@ func (manager *SessionManager) HandleSplitEncapsulated(packet *protocol.Encapsul
 	var id = int(packet.SplitId)
 
 	if session.splits[id] == nil {
-		session.splits[id] = make(chan *protocol.EncapsulatedPacket, packet.SplitCount)
+		session.splits[id] = make([]*protocol.EncapsulatedPacket, packet.SplitCount)
+		session.splitCounts[id] = 0
 	}
 
-	session.splits[id] <- packet
+	if pk := session.splits[id][packet.SplitIndex]; pk == nil {
+		session.splitCounts[id]++
+	}
 
-	if len(session.splits[id]) == int(packet.SplitCount) {
+	session.splits[id][packet.SplitIndex] = packet
+
+	if session.splitCounts[id] == packet.SplitCount {
 		var newPacket = protocol.NewEncapsulatedPacket()
-		newPacket.ResetStream()
-
-		var packets = make([]*protocol.EncapsulatedPacket, packet.SplitCount)
-
-		for len(session.splits[id]) != 0 {
-			pk := <-session.splits[id]
-			packets[pk.SplitIndex] = pk
-		}
-
-		for _, pk := range packets {
+		for _, pk := range session.splits[id] {
 			newPacket.PutBytes(pk.Buffer)
 		}
 
 		manager.HandleEncapsulated(newPacket, session)
-
 		delete(session.splits, id)
 	}
 }
