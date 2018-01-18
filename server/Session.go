@@ -55,10 +55,8 @@ func (session *Session) SendUnconnectedPacket(packet protocol.IPacket) {
 }
 
 func (session *Session) SendConnectedPacket(packet protocol.IConnectedPacket, reliability byte, priority byte) {
-	packet.Encode()
-
 	var encapsulatedPacket = protocol.NewEncapsulatedPacket()
-	encapsulatedPacket.Buffer = packet.GetBuffer()
+	encapsulatedPacket.Pk = packet
 	encapsulatedPacket.OrderChannel = 0
 	encapsulatedPacket.Reliability = reliability
 
@@ -67,10 +65,15 @@ func (session *Session) SendConnectedPacket(packet protocol.IConnectedPacket, re
 		return
 	}
 
+	packet.Encode()
+	encapsulatedPacket.Buffer = packet.GetBuffer()
+	encapsulatedPacket.Pk = nil
+
 	if encapsulatedPacket.IsReliable() {
 		encapsulatedPacket.MessageIndex = session.messageIndex
 		session.messageIndex++
 	}
+
 	if encapsulatedPacket.IsSequenced() {
 		encapsulatedPacket.OrderIndex = session.orderIndex[encapsulatedPacket.OrderChannel]
 		session.orderIndex[encapsulatedPacket.OrderChannel]++

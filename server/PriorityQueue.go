@@ -115,6 +115,10 @@ func (queue *PriorityQueue) FlushHighPriority() {
 
 	for len(queue.High) > 0 {
 		var encapsulated = <-queue.High
+		encapsulated.Pk.Encode()
+		encapsulated.Buffer = encapsulated.Pk.GetBuffer()
+		encapsulated.Pk = nil
+
 		if datagrams[datagramIndex].GetLength() + encapsulated.GetLength() > int(queue.session.mtuSize - 36) {
 			datagramIndex++
 
@@ -152,6 +156,10 @@ func (queue *PriorityQueue) FlushMediumPriority() {
 
 	for len(queue.Medium) > 0 {
 		var encapsulated = <-queue.Medium
+		encapsulated.Pk.Encode()
+		encapsulated.Buffer = encapsulated.Pk.GetBuffer()
+		encapsulated.Pk = nil
+
 		if datagrams[datagramIndex].GetLength() + encapsulated.GetLength() > int(queue.session.mtuSize - 36) {
 			datagramIndex++
 
@@ -188,6 +196,10 @@ func (queue *PriorityQueue) FlushLowPriority() {
 
 	for len(queue.Low) > 0 {
 		var encapsulated = <-queue.Low
+		encapsulated.Pk.Encode()
+		encapsulated.Buffer = encapsulated.Pk.GetBuffer()
+		encapsulated.Pk = nil
+
 		if datagrams[datagramIndex].GetLength() + encapsulated.GetLength() > int(queue.session.mtuSize - 36) {
 			datagramIndex++
 
