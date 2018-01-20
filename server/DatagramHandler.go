@@ -122,5 +122,5 @@ func (manager *SessionManager) SendPing(session *Session) {
 	var ping = protocol.NewConnectedPing()
 	ping.PingSendTime = manager.server.GetRunTime()
 
-	session.SendConnectedPacket(ping, protocol.ReliabilityUnreliable, PriorityMedium)
+	session.SendConnectedPacket(ping, protocol.ReliabilityUnreliable, PriorityImmediate)
 }

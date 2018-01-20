@@ -83,7 +83,6 @@ func (manager *SessionManager) HandlePacket(packet protocol.IPacket, session *Se
 }
 
 func (manager *SessionManager) SendPacket(packet protocol.IPacket, session *Session) {
-	session.LastUpdate = time.Now().Unix()
 	packet.Encode()
 
 	manager.server.udp.WriteBuffer(packet.GetBuffer(), session.GetAddress(), session.GetPort())

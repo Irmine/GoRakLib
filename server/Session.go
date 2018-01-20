@@ -48,7 +48,6 @@ func NewSession(manager *SessionManager, address string, port uint16) *Session {
 }
 
 func (session *Session) SendUnconnectedPacket(packet protocol.IPacket) {
-	session.LastUpdate = time.Now().Unix()
 	packet.Encode()
 
 	session.manager.server.udp.WriteBuffer(packet.GetBuffer(), session.GetAddress(), session.GetPort())
