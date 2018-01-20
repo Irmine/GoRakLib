@@ -72,8 +72,6 @@ func (manager *SessionManager) HandleEncapsulated(packet *protocol.EncapsulatedP
 
 		session.SendConnectedPacket(pong, protocol.ReliabilityUnreliable, PriorityLow)
 
-		manager.SendPing(session)
-
 	case identifiers.ConnectedPong:
 		var pong = protocol.NewConnectedPong()
 		pong.Buffer = packet.Buffer

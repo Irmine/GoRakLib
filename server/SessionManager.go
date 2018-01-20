@@ -51,6 +51,10 @@ func (manager *SessionManager) Tick() {
 				session.Close(false)
 			}
 
+			if time.Now().Unix() % 5 == 0 {
+				manager.SendPing(session)
+			}
+
 			if session.IsReadyForDeletion() {
 				manager.Disconnect(session)
 				return
