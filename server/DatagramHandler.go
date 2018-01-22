@@ -6,11 +6,19 @@ import (
 	"fmt"
 )
 
-func (manager *SessionManager) HandleDatagram(datagram *protocol.Datagram, session *Session) {
+func (manager *SessionManager) ProcessDatagram(datagram *protocol.Datagram, session *Session) {
 	var ack = protocol.NewACK()
 	ack.Packets = []uint32{datagram.SequenceNumber}
 	manager.SendPacket(ack, session)
 
+	session.receiveWindow.SubmitDatagram(datagram)
+}
+
+func (manager *SessionManager) HandleDatagram(datagram *protocol.Datagram, session *Session) {
+	if datagram == nil {
+		return
+	}
+	println(datagram.SequenceNumber)
 	for _, packet := range *datagram.GetPackets() {
 		manager.HandleEncapsulated(packet, session)
 	}

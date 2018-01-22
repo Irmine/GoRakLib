@@ -52,12 +52,28 @@ func (packet *AcknowledgementPacket) Encode() {
 	var firstPacket = packet.Packets[0]
 	var lastPacket = packet.Packets[0]
 
+	var intervalCount int16 = 1
+
 	for pointer < packetCount {
 		currentPacket := packet.Packets[pointer]
 		difference := currentPacket - lastPacket
 
 		if difference == 1 {
 			lastPacket = currentPacket
+		} else {
+			if firstPacket == lastPacket {
+				stream.PutByte(01)
+				stream.PutLittleTriad(lastPacket)
+				currentPacket = lastPacket
+			} else {
+				stream.PutByte(0)
+				stream.PutLittleTriad(firstPacket)
+				stream.PutLittleTriad(lastPacket)
+
+				lastPacket = currentPacket
+				firstPacket = lastPacket
+			}
+			intervalCount++
 		}
 
 		pointer++
@@ -72,7 +88,7 @@ func (packet *AcknowledgementPacket) Encode() {
 		stream.PutLittleTriad(lastPacket)
 	}
 
-	packet.PutShort(1)
+	packet.PutShort(intervalCount)
 	packet.PutBytes(stream.Buffer)
 }
 

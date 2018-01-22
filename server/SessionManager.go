@@ -51,6 +51,8 @@ func (manager *SessionManager) Tick() {
 				session.Close(false)
 			}
 
+			session.receiveWindow.Tick()
+
 			if time.Now().Unix() % 5 == 0 {
 				manager.SendPing(session)
 			}
@@ -73,7 +75,7 @@ func (manager *SessionManager) HandlePacket(packet protocol.IPacket, session *Se
 		manager.HandleUnconnectedMessage(packet, session)
 	} else if session.IsOpened() {
 		if datagram, ok := packet.(*protocol.Datagram); ok {
-			manager.HandleDatagram(datagram, session)
+			manager.ProcessDatagram(datagram, session)
 		} else if nak, ok := packet.(*protocol.NAK); ok {
 			manager.HandleNak(nak, session)
 		} else if ack, ok := packet.(*protocol.ACK); ok {

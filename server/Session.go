@@ -38,12 +38,15 @@ type Session struct {
 
 	forceClose bool
 	timeoutTick int
+
+	receiveWindow *ReceiveWindow
 }
 
 func NewSession(manager *SessionManager, address string, port uint16) *Session {
 	var session = &Session{splitCounts: make(map[int]uint), recoveryQueue: NewRecoveryQueue(), orderIndex: make(map[byte]uint32), manager: manager, address: address, port: port, opened: false, connected: false, splits: make(map[int][]*protocol.EncapsulatedPacket), packetBatches: make(chan protocol.EncapsulatedPacket, 512), currentSequenceNumber: 1}
 	session.queue = NewPriorityQueue(session)
 	session.LastUpdate = time.Now().Unix()
+	session.receiveWindow = NewReceiveWindow(session)
 	return session
 }
 
