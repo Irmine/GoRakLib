@@ -23,12 +23,12 @@ func (pool *PacketPool) RegisterPacket(id int, packet func() protocol.IPacket) {
 	pool.packets[id] = packet
 }
 
-func (pool *PacketPool) GetPacket(buffer []byte) protocol.IPacket {
+func (pool *PacketPool) GetPacket(buffer []byte, sessionExists bool) protocol.IPacket {
 	var packet, ok = pool.packets[int(buffer[0])]
 	if !ok {
 		var header = buffer[0]
-		if header & protocol.BitFlagValid == 0 {
-			return protocol.NewDatagram() // TODO: Error for invalid.
+		if !sessionExists {
+			return NewRawPacket()
 		}
 
 		if header & protocol.BitFlagIsAck != 0 {

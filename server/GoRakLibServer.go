@@ -22,10 +22,12 @@ type GoRakLibServer struct {
 	useEncryption bool
 
 	startingTime int64
+
+	rawPackets chan RawPacket
 }
 
 func NewGoRakLibServer(serverName string, address string, port uint16) *GoRakLibServer {
-	var server = GoRakLibServer{}
+	var server = &GoRakLibServer{}
 	server.serverName = serverName
 	var udp = NewUDPServer(address, port)
 
@@ -33,16 +35,26 @@ func NewGoRakLibServer(serverName string, address string, port uint16) *GoRakLib
 
 	server.udp = &udp
 	server.port = port
-	server.sessionManager = NewSessionManager(&server)
+	server.sessionManager = NewSessionManager(server)
+
+	server.rawPackets = make(chan RawPacket, 512)
 
 	server.startingTime = time.Now().UnixNano() / int64(time.Millisecond)
 
 	go func() {
 		for {
-			var packet, ip, port, err = udp.ReadBuffer()
+			var packet, ip, port, err = udp.ReadBuffer(server)
 			if err != nil {
 				continue
 			}
+
+			if pk, isRaw := packet.(RawPacket); isRaw {
+				pk.Address = ip
+				pk.Port = port
+				server.AddRaw(pk)
+				continue
+			}
+
 			if !server.sessionManager.SessionExists(ip, port) {
 				server.sessionManager.CreateSession(ip, port)
 			}
@@ -51,12 +63,28 @@ func NewGoRakLibServer(serverName string, address string, port uint16) *GoRakLib
 		}
 	}()
 
-	return &server
+	return server
+}
+
+func (server *GoRakLibServer) SendRaw(packet RawPacket) {
+	server.udp.WriteBuffer(packet.Buffer, packet.Address, packet.Port)
+}
+
+func (server *GoRakLibServer) AddRaw(packet RawPacket) {
+	server.rawPackets <- packet
+}
+
+func (server *GoRakLibServer) GetRawPackets() []RawPacket {
+	var packets []RawPacket
+	for len(server.rawPackets) != 0 {
+		packets = append(packets, <-server.rawPackets)
+	}
+	return packets
 }
 
 func (server *GoRakLibServer) GetRunTime() int64 {
-	var time = time.Now().UnixNano() / int64(time.Millisecond)
-	return time - server.startingTime
+	var t = time.Now().UnixNano() / int64(time.Millisecond)
+	return t - server.startingTime
 }
 
 func (server *GoRakLibServer) GetSessionManager() *SessionManager {
