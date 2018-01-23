@@ -40,6 +40,7 @@ type Session struct {
 	timeoutTick int
 
 	receiveWindow *ReceiveWindow
+	receiveSequence uint32
 }
 
 func NewSession(manager *SessionManager, address string, port uint16) *Session {

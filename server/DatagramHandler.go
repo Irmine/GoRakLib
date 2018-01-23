@@ -19,6 +19,11 @@ func (manager *SessionManager) HandleDatagram(datagram *protocol.Datagram, sessi
 		return
 	}
 
+	if datagram.SequenceNumber <= session.receiveSequence && datagram.SequenceNumber != 0 {
+		return
+	}
+
+	session.receiveSequence = datagram.SequenceNumber
 	for _, packet := range *datagram.GetPackets() {
 		manager.HandleEncapsulated(packet, session)
 	}

@@ -25,10 +25,6 @@ func (window *ReceiveWindow) SetLowestIndex(index uint32) {
 }
 
 func (window *ReceiveWindow) SubmitDatagram(datagram *protocol.Datagram) {
-	if datagram.SequenceNumber <= window.lowestIndex && window.lowestIndex != window.highestIndex {
-		return
-	}
-
 	window.datagrams[datagram.SequenceNumber] = datagram
 	if datagram.SequenceNumber > window.highestIndex {
 		window.highestIndex = datagram.SequenceNumber
