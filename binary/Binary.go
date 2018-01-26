@@ -6,28 +6,26 @@ import (
 )
 
 func Read(buffer *[]byte, offset *int, length int) []byte {
-	bytes := make([]byte, 0)
-	if *offset >= len(*buffer) {
-		fmt.Printf("An error occurred: %v", "no bytes left to read")
-		panic("Aborting...")
-	}
-	if length > 1 {
-		for i := 0; i < length; i++ {
-			bytes = append(bytes, (*buffer)[*offset])
-			*offset++
+	var initialLen = len((*buffer)[*offset:])
+	defer func() {
+		if err := recover(); err != nil {
+			fmt.Println("Requested length:", length, ", have length:", initialLen)
 		}
+	}()
+
+	var bytes []byte
+	if length == 0 {
 		return bytes
-	} else if length == -1 {
-		for {
-			if *offset >= len(*buffer) - 1 {
-				break
-			}
-			bytes = append(bytes, (*buffer)[*offset])
-			*offset++
-		}
 	}
-	bytes = append(bytes, (*buffer)[*offset])
-	*offset++
+
+	if length == -1 {
+		return (*buffer)[*offset:]
+	}
+
+	for i := 0; i < length; i++ {
+		bytes = append(bytes, (*buffer)[*offset])
+		*offset++
+	}
 	return bytes
 }
 
