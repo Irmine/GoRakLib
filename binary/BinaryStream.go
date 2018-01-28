@@ -22,10 +22,11 @@ func (stream *BinaryStream) Feof() bool {
 }
 
 func (stream *BinaryStream) Get(length int) []byte {
+	if length < 0 {
+		length = len(stream.Buffer) - stream.Offset
+	}
 	return Read(&stream.Buffer, &stream.Offset, length)
 }
-
-//big
 
 func (stream *BinaryStream) PutBool(v bool) {
 	WriteBool(&stream.Buffer, v)
