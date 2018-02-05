@@ -31,7 +31,7 @@ type Session struct {
 
 	ping uint64
 
-	orderIndex map[byte]uint32
+	orderIndex sync.Map
 	messageIndex uint32
 	splitId int16
 
@@ -42,12 +42,10 @@ type Session struct {
 
 	receiveWindow *ReceiveWindow
 	receiveSequence uint32
-
-	mutex sync.Mutex
 }
 
 func NewSession(manager *SessionManager, address string, port uint16) *Session {
-	var session = &Session{splitCounts: make(map[int]uint), recoveryQueue: NewRecoveryQueue(), orderIndex: make(map[byte]uint32), manager: manager, address: address, port: port, opened: false, connected: false, splits: make(map[int][]*protocol.EncapsulatedPacket), packetBatches: make(chan protocol.EncapsulatedPacket, 512), currentSequenceNumber: 1}
+	var session = &Session{splitCounts: make(map[int]uint), recoveryQueue: NewRecoveryQueue(), orderIndex: sync.Map{}, manager: manager, address: address, port: port, opened: false, connected: false, splits: make(map[int][]*protocol.EncapsulatedPacket), packetBatches: make(chan protocol.EncapsulatedPacket, 512), currentSequenceNumber: 1}
 	session.queue = NewPriorityQueue(session)
 	session.LastUpdate = time.Now().Unix()
 	session.receiveWindow = NewReceiveWindow(session)
@@ -81,8 +79,13 @@ func (session *Session) SendConnectedPacket(packet protocol.IConnectedPacket, re
 	}
 
 	if encapsulatedPacket.IsSequenced() {
-		encapsulatedPacket.OrderIndex = session.orderIndex[encapsulatedPacket.OrderChannel]
-		session.orderIndex[encapsulatedPacket.OrderChannel]++
+		i, _ := session.orderIndex.Load(encapsulatedPacket.OrderChannel)
+		if i == nil {
+			i = uint32(0)
+		}
+		encapsulatedPacket.OrderIndex = i.(uint32)
+
+		session.orderIndex.Store(encapsulatedPacket.OrderChannel, i.(uint32) + 1)
 	}
 
 	var datagram = protocol.NewDatagram()

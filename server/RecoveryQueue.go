@@ -6,22 +6,19 @@ import (
 )
 
 type RecoveryQueue struct {
-	mutex sync.Mutex
-	recoveryMap map[uint32]*protocol.Datagram
+	recoveryMap sync.Map
 }
 
 func NewRecoveryQueue() *RecoveryQueue {
-	return &RecoveryQueue{sync.Mutex{}, make(map[uint32]*protocol.Datagram)}
+	return &RecoveryQueue{sync.Map{}}
 }
 
 func (queue *RecoveryQueue) AddRecoveryFor(datagram *protocol.Datagram) {
-	queue.mutex.Lock()
-	queue.recoveryMap[datagram.SequenceNumber] = datagram
-	queue.mutex.Unlock()
+	queue.recoveryMap.Store(datagram.SequenceNumber, datagram)
 }
 
 func (queue *RecoveryQueue) CanBeRecovered(sequenceNumber uint32) bool {
-	var _, canBeRecovered = queue.recoveryMap[sequenceNumber]
+	var _, canBeRecovered = queue.recoveryMap.Load(sequenceNumber)
 	return canBeRecovered
 }
 
@@ -29,21 +26,24 @@ func (queue *RecoveryQueue) Recover(sequenceNumbers []uint32) []*protocol.Datagr
 	var datagrams []*protocol.Datagram
 	for _, sequenceNum := range sequenceNumbers {
 		if queue.CanBeRecovered(sequenceNum) {
-			datagram, _ := queue.recoveryMap[sequenceNum]
-			datagrams = append(datagrams, datagram)
+			datagram, _ := queue.recoveryMap.Load(sequenceNum)
+			datagrams = append(datagrams, datagram.(*protocol.Datagram))
 		}
 	}
 	return datagrams
 }
 
 func (queue *RecoveryQueue) FlagForDeletion(sequenceNumbers []uint32) {
-	queue.mutex.Lock()
 	for _, sequenceNum := range sequenceNumbers {
-		delete(queue.recoveryMap, sequenceNum)
+		queue.recoveryMap.Delete(sequenceNum)
 	}
-	queue.mutex.Unlock()
 }
 
 func (queue *RecoveryQueue) IsClear() bool {
-	return len(queue.recoveryMap) == 0
+	var length = 0
+	queue.recoveryMap.Range(func(key, value interface{}) bool {
+		length++
+		return true
+	})
+	return length == 0
 }
