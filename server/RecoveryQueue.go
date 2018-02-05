@@ -2,18 +2,22 @@ package server
 
 import (
 	"goraklib/protocol"
+	"sync"
 )
 
 type RecoveryQueue struct {
+	mutex sync.Mutex
 	recoveryMap map[uint32]*protocol.Datagram
 }
 
 func NewRecoveryQueue() *RecoveryQueue {
-	return &RecoveryQueue{make(map[uint32]*protocol.Datagram)}
+	return &RecoveryQueue{sync.Mutex{}, make(map[uint32]*protocol.Datagram)}
 }
 
 func (queue *RecoveryQueue) AddRecoveryFor(datagram *protocol.Datagram) {
+	queue.mutex.Lock()
 	queue.recoveryMap[datagram.SequenceNumber] = datagram
+	queue.mutex.Unlock()
 }
 
 func (queue *RecoveryQueue) CanBeRecovered(sequenceNumber uint32) bool {
@@ -33,9 +37,11 @@ func (queue *RecoveryQueue) Recover(sequenceNumbers []uint32) []*protocol.Datagr
 }
 
 func (queue *RecoveryQueue) FlagForDeletion(sequenceNumbers []uint32) {
+	queue.mutex.Lock()
 	for _, sequenceNum := range sequenceNumbers {
 		delete(queue.recoveryMap, sequenceNum)
 	}
+	queue.mutex.Unlock()
 }
 
 func (queue *RecoveryQueue) IsClear() bool {

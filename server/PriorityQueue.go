@@ -35,8 +35,10 @@ func (queue *PriorityQueue) AddEncapsulatedToQueue(packet *protocol.Encapsulated
 		queue.session.messageIndex++
 	}
 	if packet.IsSequenced() {
+		queue.session.mutex.Lock()
 		packet.OrderIndex = queue.session.orderIndex[packet.OrderChannel]
 		queue.session.orderIndex[packet.OrderChannel]++
+		queue.session.mutex.Unlock()
 	}
 
 	var maximumEncapsulatedSize = int(queue.session.mtuSize - 60)

@@ -4,6 +4,7 @@ import (
 	"strconv"
 	"goraklib/protocol"
 	"time"
+	"sync"
 )
 
 type Session struct {
@@ -41,6 +42,8 @@ type Session struct {
 
 	receiveWindow *ReceiveWindow
 	receiveSequence uint32
+
+	mutex sync.Mutex
 }
 
 func NewSession(manager *SessionManager, address string, port uint16) *Session {

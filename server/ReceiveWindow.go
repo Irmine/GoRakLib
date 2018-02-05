@@ -1,6 +1,9 @@
 package server
 
-import "goraklib/protocol"
+import (
+	"goraklib/protocol"
+	"sync"
+)
 
 type ReceiveWindow struct {
 	session *Session
@@ -9,11 +12,13 @@ type ReceiveWindow struct {
 	highestIndex uint32
 	datagrams map[uint32]*protocol.Datagram
 
+	mutex sync.Mutex
+
 	canFlush bool
 }
 
 func NewReceiveWindow(session *Session) *ReceiveWindow {
-	return &ReceiveWindow{session, 0, 0, make(map[uint32]*protocol.Datagram), false}
+	return &ReceiveWindow{session, 0, 0, make(map[uint32]*protocol.Datagram), sync.Mutex{}, false}
 }
 
 func (window *ReceiveWindow) SetHighestIndex(index uint32) {
@@ -25,7 +30,9 @@ func (window *ReceiveWindow) SetLowestIndex(index uint32) {
 }
 
 func (window *ReceiveWindow) SubmitDatagram(datagram *protocol.Datagram) {
+	window.mutex.Lock()
 	window.datagrams[datagram.SequenceNumber] = datagram
+	window.mutex.Unlock()
 	if datagram.SequenceNumber > window.highestIndex {
 		window.highestIndex = datagram.SequenceNumber
 	}
@@ -42,8 +49,10 @@ func (window *ReceiveWindow) SubmitDatagram(datagram *protocol.Datagram) {
 
 func (window *ReceiveWindow) Tick() {
 	if window.canFlush {
+		window.mutex.Lock()
 		window.Release()
 		window.datagrams = map[uint32]*protocol.Datagram{}
+		window.mutex.Unlock()
 		return
 	}
 
