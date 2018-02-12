@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"errors"
 	"goraklib/protocol"
+	"fmt"
 )
 
 type UDPServer struct {
@@ -50,7 +51,7 @@ func (udp *UDPServer) ReadBuffer(server *GoRakLibServer) (protocol.IPacket, stri
 	n, addr, err := udp.Conn.ReadFromUDP(buffer)
 
 	if err != nil {
-		panic(err)
+		fmt.Println(err)
 	}
 
 	buffer = buffer[:n]
@@ -80,6 +81,6 @@ func (udp *UDPServer) WriteBuffer(buffer []byte, ip string, port uint16) {
 	_, err := udp.Conn.WriteToUDP(buffer, &addr)
 
 	if err != nil {
-		panic(err)
+		fmt.Println(err)
 	}
 }
