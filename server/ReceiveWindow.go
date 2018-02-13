@@ -28,6 +28,9 @@ func (window *ReceiveWindow) SetLowestIndex(index uint32) {
 }
 
 func (window *ReceiveWindow) SubmitDatagram(datagram *protocol.Datagram) {
+	defer func() {
+		recover()
+	}()
 	window.datagrams.Store(datagram.SequenceNumber, datagram)
 	if datagram.SequenceNumber > window.highestIndex {
 		window.highestIndex = datagram.SequenceNumber
