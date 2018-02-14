@@ -1,18 +1,19 @@
 package server
 
 import (
+	"errors"
+	"fmt"
 	"net"
 	"strconv"
-	"errors"
-	"goraklib/protocol"
-	"fmt"
+
+	"github.com/irmine/goraklib/protocol"
 )
 
 type UDPServer struct {
-	port uint16
+	port    uint16
 	address string
-	Conn *net.UDPConn
-	pool *PacketPool
+	Conn    *net.UDPConn
+	pool    *PacketPool
 }
 
 func NewUDPServer(address string, port uint16) UDPServer {
@@ -24,7 +25,7 @@ func NewUDPServer(address string, port uint16) UDPServer {
 		address = ""
 	}
 
-	var addr, err = net.ResolveUDPAddr("udp", address + ":" + strconv.Itoa(int(port)))
+	var addr, err = net.ResolveUDPAddr("udp", address+":"+strconv.Itoa(int(port)))
 	addr.Port = int(port)
 
 	server.address = addr.IP.String()
@@ -74,7 +75,7 @@ func (udp *UDPServer) ReadBuffer(server *GoRakLibServer) (protocol.IPacket, stri
 func (udp *UDPServer) WriteBuffer(buffer []byte, ip string, port uint16) {
 
 	addr := net.UDPAddr{
-		IP: net.ParseIP(ip),
+		IP:   net.ParseIP(ip),
 		Port: int(port),
 	}
 

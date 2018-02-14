@@ -2,45 +2,46 @@ package server
 
 import (
 	"strconv"
-	"goraklib/protocol"
-	"time"
 	"sync"
+	"time"
+
+	"github.com/irmine/goraklib/protocol"
 )
 
 type Session struct {
-	manager *SessionManager
-	queue *PriorityQueue
+	manager       *SessionManager
+	queue         *PriorityQueue
 	recoveryQueue *RecoveryQueue
 
 	address string
-	port uint16
+	port    uint16
 
-	opened bool
+	opened    bool
 	connected bool
-	closed bool
+	closed    bool
 
 	currentSequenceNumber uint32
-	mtuSize int16
+	mtuSize               int16
 
 	packetBatches chan protocol.EncapsulatedPacket
 
-	splits map[int][]*protocol.EncapsulatedPacket
+	splits      map[int][]*protocol.EncapsulatedPacket
 	splitCounts map[int]uint
 
 	clientId uint64
 
 	ping uint64
 
-	orderIndex sync.Map
+	orderIndex   sync.Map
 	messageIndex uint32
-	splitId int16
+	splitId      int16
 
 	LastUpdate int64
 
-	forceClose bool
+	forceClose  bool
 	timeoutTick int
 
-	receiveWindow *ReceiveWindow
+	receiveWindow   *ReceiveWindow
 	receiveSequence uint32
 }
 
@@ -85,7 +86,7 @@ func (session *Session) SendConnectedPacket(packet protocol.IConnectedPacket, re
 		}
 		encapsulatedPacket.OrderIndex = i.(uint32)
 
-		session.orderIndex.Store(encapsulatedPacket.OrderChannel, i.(uint32) + 1)
+		session.orderIndex.Store(encapsulatedPacket.OrderChannel, i.(uint32)+1)
 	}
 
 	var datagram = protocol.NewDatagram()

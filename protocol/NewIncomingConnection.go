@@ -1,15 +1,15 @@
 package protocol
 
-import "goraklib/protocol/identifiers"
+import "github.com/irmine/goraklib/protocol/identifiers"
 
 type NewIncomingConnection struct {
 	*Packet
-	ServerAddress string
-	ServerPort uint16
-	PingSendTime uint64
-	PongSendTime uint64
-	SystemAddresses []string
-	SystemPorts []uint16
+	ServerAddress    string
+	ServerPort       uint16
+	PingSendTime     uint64
+	PongSendTime     uint64
+	SystemAddresses  []string
+	SystemPorts      []uint16
 	SystemIdVersions []byte
 }
 

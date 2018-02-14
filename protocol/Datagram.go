@@ -5,17 +5,17 @@ const (
 	BitFlagIsAck = 0x40
 	BitFlagIsNak = 0x20
 
-	BitFlagPacketPair = 0x10
+	BitFlagPacketPair     = 0x10
 	BitFlagContinuousSend = 0x08
-	BitFlagNeedsBAndAs = 0x04
+	BitFlagNeedsBAndAs    = 0x04
 )
 
 type Datagram struct {
 	*Packet
 
-	PacketPair bool
+	PacketPair     bool
 	ContinuousSend bool
-	NeedsBAndAs bool
+	NeedsBAndAs    bool
 
 	SequenceNumber uint32
 

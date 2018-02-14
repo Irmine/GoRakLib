@@ -1,9 +1,10 @@
 package protocol
 
 import (
-	"goraklib/protocol/identifiers"
 	"sort"
-	"goraklib/binary"
+
+	"github.com/irmine/goraklib/binary"
+	"github.com/irmine/goraklib/protocol/identifiers"
 )
 
 type AcknowledgementPacket struct {

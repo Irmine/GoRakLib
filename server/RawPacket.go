@@ -1,13 +1,13 @@
 package server
 
 import (
-	"goraklib/binary"
+	"github.com/irmine/goraklib/binary"
 )
 
 type RawPacket struct {
 	*binary.BinaryStream
 	Address string
-	Port uint16
+	Port    uint16
 }
 
 func NewRawPacket() RawPacket {

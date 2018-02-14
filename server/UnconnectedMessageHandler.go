@@ -1,6 +1,6 @@
 package server
 
-import "goraklib/protocol"
+import "github.com/irmine/goraklib/protocol"
 
 func (manager *SessionManager) HandleUnconnectedMessage(packetInterface protocol.IPacket, session *Session) {
 	if session.IsOpened() {

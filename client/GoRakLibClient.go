@@ -1,31 +1,32 @@
 package client
 
 import (
+	"errors"
+	"fmt"
 	"net"
 	"strconv"
-	"goraklib/protocol"
-	"errors"
 	"time"
-	"fmt"
+
+	"github.com/irmine/goraklib/protocol"
 )
 
 type GoRakLibClient struct {
-	connection net.Conn
+	connection        net.Conn
 	connectionAddress string
-	connectionPort uint16
+	connectionPort    uint16
 
 	packetPool *PacketPool
 
 	recoveryQueue *RecoveryQueue
-	queue *PriorityQueue
+	queue         *PriorityQueue
 
-	isConnected bool
+	isConnected          bool
 	isDiscoveringMtuSize bool
-	ticker *time.Ticker
+	ticker               *time.Ticker
 
-	messageIndex uint32
+	messageIndex          uint32
 	currentSequenceNumber uint32
-	orderIndex map[byte]uint32
+	orderIndex            map[byte]uint32
 
 	mtuSize int16
 	splitId int16
@@ -36,7 +37,7 @@ type GoRakLibClient struct {
 }
 
 func NewGoRakLibClient() *GoRakLibClient {
-	var client = &GoRakLibClient{packetPool:NewPacketPool(), recoveryQueue:NewRecoveryQueue(), ticker:time.NewTicker(time.Second), mtuSize:1500}
+	var client = &GoRakLibClient{packetPool: NewPacketPool(), recoveryQueue: NewRecoveryQueue(), ticker: time.NewTicker(time.Second), mtuSize: 1500}
 	client.queue = NewPriorityQueue(client)
 
 	go func() {
@@ -149,7 +150,7 @@ func (client *GoRakLibClient) Connect(address string, port uint16) error {
 	}
 
 	fmt.Println("Client connecting to address:", address, "with port:", port, "...")
-	client.connection, err = net.Dial("udp", address + ":" + strconv.Itoa(int(port)))
+	client.connection, err = net.Dial("udp", address+":"+strconv.Itoa(int(port)))
 	client.connectionAddress = address
 	client.connectionPort = port
 

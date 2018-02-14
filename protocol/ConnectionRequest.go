@@ -1,12 +1,12 @@
 package protocol
 
-import "goraklib/protocol/identifiers"
+import "github.com/irmine/goraklib/protocol/identifiers"
 
 type ConnectionRequest struct {
 	*Packet
-	ClientId uint64
+	ClientId     uint64
 	PingSendTime uint64
-	Security byte
+	Security     byte
 }
 
 func NewConnectionRequest() *ConnectionRequest {

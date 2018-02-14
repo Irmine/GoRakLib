@@ -2,24 +2,25 @@ package server
 
 import (
 	"math/rand"
-	"goraklib/protocol"
 	"time"
+
+	"github.com/irmine/goraklib/protocol"
 )
 
 type GoRakLibServer struct {
-	serverName string
-	serverId int64
-	port uint16
-	udp *UDPServer
-	sessionManager *SessionManager
-	sessionCount uint
-	maxSessionCount uint
-	motd string
-	defaultGameMode string
+	serverName        string
+	serverId          int64
+	port              uint16
+	udp               *UDPServer
+	sessionManager    *SessionManager
+	sessionCount      uint
+	maxSessionCount   uint
+	motd              string
+	defaultGameMode   string
 	minecraftProtocol uint
-	minecraftVersion string
-	security bool
-	useEncryption bool
+	minecraftVersion  string
+	security          bool
+	useEncryption     bool
 
 	startingTime int64
 
@@ -192,4 +193,3 @@ func (server *GoRakLibServer) SendPacket(packet protocol.IPacket, session *Sessi
 		server.udp.WriteBuffer(packet.GetBuffer(), session.GetAddress(), session.GetPort())
 	}
 }
-

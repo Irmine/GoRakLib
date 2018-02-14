@@ -1,22 +1,23 @@
 package server
 
 import (
-	"goraklib/protocol"
 	"math"
+
+	"github.com/irmine/goraklib/protocol"
 )
 
 const (
 	PriorityImmediate = 0
-	PriorityLow = 1
-	PriorityMedium = 2
-	PriorityHigh = 3
+	PriorityLow       = 1
+	PriorityMedium    = 2
+	PriorityHigh      = 3
 )
 
 type PriorityQueue struct {
 	session *Session
-	Low chan *protocol.EncapsulatedPacket
-	Medium chan *protocol.EncapsulatedPacket
-	High chan *protocol.EncapsulatedPacket
+	Low     chan *protocol.EncapsulatedPacket
+	Medium  chan *protocol.EncapsulatedPacket
+	High    chan *protocol.EncapsulatedPacket
 }
 
 func NewPriorityQueue(session *Session) *PriorityQueue {
@@ -41,7 +42,7 @@ func (queue *PriorityQueue) AddEncapsulatedToQueue(packet *protocol.Encapsulated
 		}
 		packet.OrderIndex = i.(uint32)
 
-		queue.session.orderIndex.Store(packet.OrderChannel, i.(uint32) + 1)
+		queue.session.orderIndex.Store(packet.OrderChannel, i.(uint32)+1)
 	}
 
 	var maximumEncapsulatedSize = int(queue.session.mtuSize - 60)
@@ -105,7 +106,6 @@ func (queue *PriorityQueue) Flush() {
 	queue.FlushHighPriority()
 }
 
-
 func (queue *PriorityQueue) FlushHighPriority() {
 	if len(queue.High) == 0 {
 		return
@@ -124,7 +124,7 @@ func (queue *PriorityQueue) FlushHighPriority() {
 		encapsulated.Buffer = encapsulated.Pk.GetBuffer()
 		encapsulated.Pk = nil
 
-		if datagrams[datagramIndex].GetLength() + encapsulated.GetLength() > int(queue.session.mtuSize - 36) {
+		if datagrams[datagramIndex].GetLength()+encapsulated.GetLength() > int(queue.session.mtuSize-36) {
 			datagramIndex++
 
 			var newDatagram = protocol.NewDatagram()
@@ -165,7 +165,7 @@ func (queue *PriorityQueue) FlushMediumPriority() {
 		encapsulated.Buffer = encapsulated.Pk.GetBuffer()
 		encapsulated.Pk = nil
 
-		if datagrams[datagramIndex].GetLength() + encapsulated.GetLength() > int(queue.session.mtuSize - 36) {
+		if datagrams[datagramIndex].GetLength()+encapsulated.GetLength() > int(queue.session.mtuSize-36) {
 			datagramIndex++
 
 			var newDatagram = protocol.NewDatagram()
@@ -205,7 +205,7 @@ func (queue *PriorityQueue) FlushLowPriority() {
 		encapsulated.Buffer = encapsulated.Pk.GetBuffer()
 		encapsulated.Pk = nil
 
-		if datagrams[datagramIndex].GetLength() + encapsulated.GetLength() > int(queue.session.mtuSize - 36) {
+		if datagrams[datagramIndex].GetLength()+encapsulated.GetLength() > int(queue.session.mtuSize-36) {
 			datagramIndex++
 
 			var newDatagram = protocol.NewDatagram()
