@@ -27,7 +27,7 @@ func NewUDPServer(address string, port uint16) UDPServer {
 	var addr, err = net.ResolveUDPAddr("udp", address + ":" + strconv.Itoa(int(port)))
 	addr.Port = int(port)
 
-	server.address = addr.IP.To4().String()
+	server.address = addr.IP.String()
 
 	conn, err := net.ListenUDP("udp", addr)
 
@@ -46,7 +46,7 @@ func (udp *UDPServer) GetPort() uint16 {
 }
 
 func (udp *UDPServer) ReadBuffer(server *GoRakLibServer) (protocol.IPacket, string, uint16, error) {
-	var buffer = make([]byte, 4096)
+	var buffer = make([]byte, 8192)
 
 	n, addr, err := udp.Conn.ReadFromUDP(buffer)
 
@@ -61,7 +61,7 @@ func (udp *UDPServer) ReadBuffer(server *GoRakLibServer) (protocol.IPacket, stri
 		return packet, "", 0, errors.New("received null packet")
 	}
 
-	var ip = addr.IP.To4().String()
+	var ip = addr.IP.String()
 	var port = uint16(addr.Port)
 
 	packet = udp.pool.GetPacket(buffer, server.sessionManager.SessionExists(ip, port))
@@ -81,6 +81,6 @@ func (udp *UDPServer) WriteBuffer(buffer []byte, ip string, port uint16) {
 	_, err := udp.Conn.WriteToUDP(buffer, &addr)
 
 	if err != nil {
-		fmt.Println(err)
+		panic(err)
 	}
 }
