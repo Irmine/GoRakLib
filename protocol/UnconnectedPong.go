@@ -1,20 +1,21 @@
 package protocol
 
 import (
-	"goraklib/protocol/identifiers"
 	"strconv"
+
+	"github.com/irmine/goraklib/protocol/identifiers"
 )
 
 type UnconnectedPong struct {
 	*UnconnectedMessage
-	PingTime int64
-	ServerId int64
-	ServerName string
-	ServerProtocol uint
-	ServerVersion string
-	OnlinePlayers uint
-	MaximumPlayers uint
-	Motd string
+	PingTime        int64
+	ServerId        int64
+	ServerName      string
+	ServerProtocol  uint
+	ServerVersion   string
+	OnlinePlayers   uint
+	MaximumPlayers  uint
+	Motd            string
 	DefaultGameMode string
 
 	// Raw data from pong.

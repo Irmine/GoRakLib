@@ -1,10 +1,11 @@
 package client
 
 import (
-	"goraklib/protocol"
-	"goraklib/protocol/identifiers"
-	"fmt"
 	"encoding/hex"
+	"fmt"
+
+	"github.com/irmine/goraklib/protocol"
+	"github.com/irmine/goraklib/protocol/identifiers"
 )
 
 const (
@@ -129,4 +130,3 @@ func (client *GoRakLibClient) SendPing() {
 
 	//client.SendConnectedPacket(ping, protocol.ReliabilityUnreliable, PriorityMedium)
 }
-

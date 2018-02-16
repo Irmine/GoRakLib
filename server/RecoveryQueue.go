@@ -1,8 +1,9 @@
 package server
 
 import (
-	"goraklib/protocol"
 	"sync"
+
+	"github.com/irmine/goraklib/protocol"
 )
 
 type RecoveryQueue struct {

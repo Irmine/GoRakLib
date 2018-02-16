@@ -1,15 +1,15 @@
 package protocol
 
-import "goraklib/protocol/identifiers"
+import "github.com/irmine/goraklib/protocol/identifiers"
 
 type ConnectionAccept struct {
 	*Packet
-	ClientAddress string
-	ClientPort uint16
-	PingSendTime uint64
-	PongSendTime uint64
-	SystemAddresses []string
-	SystemPorts []uint16
+	ClientAddress    string
+	ClientPort       uint16
+	PingSendTime     uint64
+	PongSendTime     uint64
+	SystemAddresses  []string
+	SystemPorts      []uint16
 	SystemIdVersions []byte
 }
 

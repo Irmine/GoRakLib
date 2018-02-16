@@ -1,8 +1,8 @@
 package server
 
 import (
-	"goraklib/protocol"
-	"goraklib/protocol/identifiers"
+	"github.com/irmine/goraklib/protocol"
+	"github.com/irmine/goraklib/protocol/identifiers"
 )
 
 type PacketPool struct {
@@ -31,9 +31,9 @@ func (pool *PacketPool) GetPacket(buffer []byte, sessionExists bool) protocol.IP
 			return NewRawPacket()
 		}
 
-		if header & protocol.BitFlagIsAck != 0 {
+		if header&protocol.BitFlagIsAck != 0 {
 			return protocol.NewACK()
-		} else if header & protocol.BitFlagIsNak != 0 {
+		} else if header&protocol.BitFlagIsNak != 0 {
 			return protocol.NewNAK()
 		}
 		return protocol.NewDatagram()

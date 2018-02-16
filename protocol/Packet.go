@@ -1,9 +1,10 @@
 package protocol
 
 import (
-	"strings"
 	"strconv"
-	"goraklib/binary"
+	"strings"
+
+	"github.com/irmine/goraklib/binary"
 )
 
 type Packet struct {

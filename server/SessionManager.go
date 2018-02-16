@@ -1,15 +1,16 @@
 package server
 
 import (
-	"strconv"
 	"errors"
-	"goraklib/protocol"
+	"strconv"
 	"time"
+
+	"github.com/irmine/goraklib/protocol"
 )
 
 type SessionManager struct {
-	server *GoRakLibServer
-	sessions map[string]*Session
+	server               *GoRakLibServer
+	sessions             map[string]*Session
 	disconnectedSessions chan *Session
 }
 
@@ -31,7 +32,7 @@ func (manager *SessionManager) CreateSession(address string, port uint16) {
 }
 
 func (manager *SessionManager) SessionExists(address string, port uint16) bool {
-	var _, exists = manager.sessions[address + ":" + strconv.Itoa(int(port))]
+	var _, exists = manager.sessions[address+":"+strconv.Itoa(int(port))]
 	return exists
 }
 
@@ -40,7 +41,7 @@ func (manager *SessionManager) GetSession(address string, port uint16) (*Session
 	if !manager.SessionExists(address, port) {
 		return session, errors.New("session does not yet exist")
 	}
-	session = manager.sessions[address + ":" + strconv.Itoa(int(port))]
+	session = manager.sessions[address+":"+strconv.Itoa(int(port))]
 	return session, nil
 }
 
@@ -53,7 +54,7 @@ func (manager *SessionManager) Tick() {
 
 			session.receiveWindow.Tick()
 
-			if time.Now().Unix() % 5 == 0 {
+			if time.Now().Unix()%5 == 0 {
 				manager.SendPing(session)
 			}
 

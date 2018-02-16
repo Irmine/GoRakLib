@@ -1,11 +1,11 @@
 package protocol
 
-import "goraklib/protocol/identifiers"
+import "github.com/irmine/goraklib/protocol/identifiers"
 
 type OpenConnectionResponse1 struct {
 	*UnconnectedMessage
 	ServerId int64
-	MtuSize int16
+	MtuSize  int16
 	Security bool
 }
 

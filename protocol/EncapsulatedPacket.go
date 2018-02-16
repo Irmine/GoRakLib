@@ -21,15 +21,15 @@ type EncapsulatedPacket struct {
 	*Packet
 	Pk IConnectedPacket
 
-	Reliability byte
-	HasSplit bool
-	Length uint
+	Reliability  byte
+	HasSplit     bool
+	Length       uint
 	MessageIndex uint32
-	OrderIndex uint32
+	OrderIndex   uint32
 	OrderChannel byte
-	SplitId int16
-	SplitCount uint
-	SplitIndex uint
+	SplitId      int16
+	SplitCount   uint
+	SplitIndex   uint
 }
 
 func NewEncapsulatedPacket() *EncapsulatedPacket {

@@ -1,16 +1,17 @@
 package server
 
 import (
-	"goraklib/protocol"
 	"sync"
+
+	"github.com/irmine/goraklib/protocol"
 )
 
 type ReceiveWindow struct {
 	session *Session
 
-	lowestIndex uint32
+	lowestIndex  uint32
 	highestIndex uint32
-	datagrams sync.Map
+	datagrams    sync.Map
 
 	canFlush bool
 }

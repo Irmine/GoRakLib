@@ -1,15 +1,15 @@
 package protocol
 
 import (
-	"goraklib/protocol/identifiers"
+	"github.com/irmine/goraklib/protocol/identifiers"
 )
 
 type OpenConnectionResponse2 struct {
 	*UnconnectedMessage
-	ServerId int64
-	MtuSize int16
+	ServerId      int64
+	MtuSize       int16
 	ClientAddress string
-	ClientPort uint16
+	ClientPort    uint16
 	UseEncryption bool
 }
 
@@ -36,4 +36,3 @@ func (response *OpenConnectionResponse2) Decode() {
 	response.MtuSize = response.GetShort()
 	response.UseEncryption = response.GetBool()
 }
-

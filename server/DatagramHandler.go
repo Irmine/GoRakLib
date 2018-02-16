@@ -1,9 +1,10 @@
 package server
 
 import (
-	"goraklib/protocol"
-	"goraklib/protocol/identifiers"
 	"fmt"
+
+	"github.com/irmine/goraklib/protocol"
+	"github.com/irmine/goraklib/protocol/identifiers"
 )
 
 func (manager *SessionManager) ProcessDatagram(datagram *protocol.Datagram, session *Session) {

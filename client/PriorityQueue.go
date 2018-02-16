@@ -1,22 +1,23 @@
 package client
 
 import (
-	"goraklib/protocol"
 	"math"
+
+	"github.com/irmine/goraklib/protocol"
 )
 
 const (
 	PriorityImmediate = 0
-	PriorityLow = 1
-	PriorityMedium = 2
-	PriorityHigh = 3
+	PriorityLow       = 1
+	PriorityMedium    = 2
+	PriorityHigh      = 3
 )
 
 type PriorityQueue struct {
 	client *GoRakLibClient
-	Low chan *protocol.EncapsulatedPacket
+	Low    chan *protocol.EncapsulatedPacket
 	Medium chan *protocol.EncapsulatedPacket
-	High chan *protocol.EncapsulatedPacket
+	High   chan *protocol.EncapsulatedPacket
 }
 
 func NewPriorityQueue(client *GoRakLibClient) *PriorityQueue {
@@ -100,7 +101,6 @@ func (queue *PriorityQueue) Flush() {
 	queue.FlushHighPriority()
 }
 
-
 func (queue *PriorityQueue) FlushHighPriority() {
 	if len(queue.High) == 0 {
 		return
@@ -115,7 +115,7 @@ func (queue *PriorityQueue) FlushHighPriority() {
 
 	for len(queue.High) > 0 {
 		var encapsulated = <-queue.High
-		if datagrams[datagramIndex].GetLength() + encapsulated.GetLength() > int(queue.client.mtuSize - 36) {
+		if datagrams[datagramIndex].GetLength()+encapsulated.GetLength() > int(queue.client.mtuSize-36) {
 			datagramIndex++
 
 			var newDatagram = protocol.NewDatagram()
@@ -152,7 +152,7 @@ func (queue *PriorityQueue) FlushMediumPriority() {
 
 	for len(queue.Medium) > 0 {
 		var encapsulated = <-queue.Medium
-		if datagrams[datagramIndex].GetLength() + encapsulated.GetLength() > int(queue.client.mtuSize - 36) {
+		if datagrams[datagramIndex].GetLength()+encapsulated.GetLength() > int(queue.client.mtuSize-36) {
 			datagramIndex++
 
 			var newDatagram = protocol.NewDatagram()
@@ -188,7 +188,7 @@ func (queue *PriorityQueue) FlushLowPriority() {
 
 	for len(queue.Low) > 0 {
 		var encapsulated = <-queue.Low
-		if datagrams[datagramIndex].GetLength() + encapsulated.GetLength() > int(queue.client.mtuSize - 36) {
+		if datagrams[datagramIndex].GetLength()+encapsulated.GetLength() > int(queue.client.mtuSize-36) {
 			datagramIndex++
 
 			var newDatagram = protocol.NewDatagram()

@@ -1,8 +1,9 @@
 package client
 
 import (
-	"goraklib/protocol"
 	"time"
+
+	"github.com/irmine/goraklib/protocol"
 )
 
 func (client *GoRakLibClient) HandleUnconnectedMessage(packetInterface protocol.IPacket) {

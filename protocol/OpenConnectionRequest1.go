@@ -1,13 +1,13 @@
 package protocol
 
 import (
-	"goraklib/protocol/identifiers"
+	"github.com/irmine/goraklib/protocol/identifiers"
 )
 
 type OpenConnectionRequest1 struct {
 	*UnconnectedMessage
 	Protocol byte
-	MtuSize int16
+	MtuSize  int16
 }
 
 func NewOpenConnectionRequest1() *OpenConnectionRequest1 {
@@ -21,7 +21,7 @@ func (request *OpenConnectionRequest1) Encode() {
 	request.PutMagic()
 	request.PutByte(request.Protocol)
 
-	var bytes = make([]byte, request.MtuSize + 18)
+	var bytes = make([]byte, request.MtuSize+18)
 	request.PutBytes(bytes)
 }
 

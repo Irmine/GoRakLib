@@ -1,15 +1,15 @@
 package protocol
 
 import (
-	"goraklib/protocol/identifiers"
+	"github.com/irmine/goraklib/protocol/identifiers"
 )
 
 type OpenConnectionRequest2 struct {
 	*UnconnectedMessage
 	ServerAddress string
-	ServerPort uint16
-	MtuSize int16
-	ClientId int64
+	ServerPort    uint16
+	MtuSize       int16
+	ClientId      int64
 }
 
 func NewOpenConnectionRequest2() *OpenConnectionRequest2 {

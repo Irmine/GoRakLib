@@ -1,6 +1,6 @@
 package protocol
 
-import "goraklib/protocol/identifiers"
+import "github.com/irmine/goraklib/protocol/identifiers"
 
 type ConnectedPing struct {
 	*Packet

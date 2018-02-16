@@ -1,7 +1,7 @@
 package protocol
 
 import (
-	"goraklib/protocol/identifiers"
+	"github.com/irmine/goraklib/protocol/identifiers"
 )
 
 type UnconnectedPing struct {

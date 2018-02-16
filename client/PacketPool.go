@@ -1,8 +1,8 @@
 package client
 
 import (
-	"goraklib/protocol"
-	"goraklib/protocol/identifiers"
+	"github.com/irmine/goraklib/protocol"
+	"github.com/irmine/goraklib/protocol/identifiers"
 )
 
 type PacketPool struct {
@@ -27,13 +27,13 @@ func (pool *PacketPool) GetPacket(buffer []byte) protocol.IPacket {
 	var packet, ok = pool.packets[int(buffer[0])]
 	if !ok {
 		var header = buffer[0]
-		if header & protocol.BitFlagValid == 0 {
+		if header&protocol.BitFlagValid == 0 {
 			return protocol.NewDatagram() // TODO: Error for invalid.
 		}
 
-		if header & protocol.BitFlagIsAck != 0 {
+		if header&protocol.BitFlagIsAck != 0 {
 			return protocol.NewACK()
-		} else if header & protocol.BitFlagIsNak != 0 {
+		} else if header&protocol.BitFlagIsNak != 0 {
 			return protocol.NewNAK()
 		}
 		return protocol.NewDatagram()
