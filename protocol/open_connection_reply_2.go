@@ -1,10 +1,6 @@
 package protocol
 
-import (
-	"github.com/irmine/goraklib/protocol/identifiers"
-)
-
-type OpenConnectionResponse2 struct {
+type OpenConnectionReply2 struct {
 	*UnconnectedMessage
 	ServerId      int64
 	MtuSize       int16
@@ -13,13 +9,13 @@ type OpenConnectionResponse2 struct {
 	UseEncryption bool
 }
 
-func NewOpenConnectionResponse2() *OpenConnectionResponse2 {
-	return &OpenConnectionResponse2{NewUnconnectedMessage(NewPacket(
-		identifiers.OpenConnectionResponse2,
+func NewOpenConnectionReply2() *OpenConnectionReply2 {
+	return &OpenConnectionReply2{NewUnconnectedMessage(NewPacket(
+		IdOpenConnectionReply2,
 	)), 0, 0, "", 0, false}
 }
 
-func (response *OpenConnectionResponse2) Encode() {
+func (response *OpenConnectionReply2) Encode() {
 	response.EncodeId()
 	response.PutMagic()
 	response.PutLong(response.ServerId)
@@ -28,7 +24,7 @@ func (response *OpenConnectionResponse2) Encode() {
 	response.PutBool(response.UseEncryption)
 }
 
-func (response *OpenConnectionResponse2) Decode() {
+func (response *OpenConnectionReply2) Decode() {
 	response.DecodeStep()
 	response.ReadMagic()
 	response.ServerId = response.GetLong()

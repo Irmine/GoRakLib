@@ -1,9 +1,5 @@
 package protocol
 
-import (
-	"github.com/irmine/goraklib/protocol/identifiers"
-)
-
 type UnconnectedPing struct {
 	*UnconnectedMessage
 	PingTime int64
@@ -11,7 +7,7 @@ type UnconnectedPing struct {
 
 func NewUnconnectedPing() *UnconnectedPing {
 	return &UnconnectedPing{NewUnconnectedMessage(NewPacket(
-		identifiers.UnconnectedPing,
+		IdUnconnectedPing,
 	)), 0}
 }
 

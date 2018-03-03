@@ -4,12 +4,13 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/irmine/goraklib/binary"
+
+	"github.com/irmine/binutils"
 )
 
 type Packet struct {
 	packetId int
-	*binary.BinaryStream
+	*binutils.Stream
 }
 
 type IConnectedPacket interface {
@@ -27,7 +28,7 @@ type IPacket interface {
 }
 
 func NewPacket(id int) *Packet {
-	return &Packet{id, binary.NewStream()}
+	return &Packet{id, binutils.NewStream()}
 }
 
 func (packet *Packet) GetId() int {

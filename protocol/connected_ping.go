@@ -1,7 +1,5 @@
 package protocol
 
-import "github.com/irmine/goraklib/protocol/identifiers"
-
 type ConnectedPing struct {
 	*Packet
 	PingSendTime int64
@@ -9,7 +7,7 @@ type ConnectedPing struct {
 
 func NewConnectedPing() *ConnectedPing {
 	return &ConnectedPing{NewPacket(
-		identifiers.ConnectedPing,
+		IdConnectedPing,
 	), 0}
 }
 

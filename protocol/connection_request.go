@@ -1,7 +1,5 @@
 package protocol
 
-import "github.com/irmine/goraklib/protocol/identifiers"
-
 type ConnectionRequest struct {
 	*Packet
 	ClientId     uint64
@@ -11,7 +9,7 @@ type ConnectionRequest struct {
 
 func NewConnectionRequest() *ConnectionRequest {
 	return &ConnectionRequest{NewPacket(
-		identifiers.ConnectionRequest,
+		IdConnectionRequest,
 	), 0, 0, 0}
 }
 

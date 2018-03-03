@@ -3,8 +3,7 @@ package protocol
 import (
 	"sort"
 
-	"github.com/irmine/goraklib/binary"
-	"github.com/irmine/goraklib/protocol/identifiers"
+	"github.com/irmine/binutils"
 )
 
 type AcknowledgementPacket struct {
@@ -22,13 +21,13 @@ type NAK struct {
 
 func NewACK() *ACK {
 	return &ACK{&AcknowledgementPacket{NewPacket(
-		identifiers.DatagramAck,
+		FlagDatagramAck,
 	), []uint32{}}}
 }
 
 func NewNAK() *NAK {
 	return &NAK{&AcknowledgementPacket{NewPacket(
-		identifiers.DatagramNack,
+		FlagDatagramNack,
 	), []uint32{}}}
 }
 
@@ -46,7 +45,7 @@ func (packet *AcknowledgementPacket) Encode() {
 		return
 	}
 
-	var stream = binary.NewStream()
+	var stream = binutils.NewStream()
 	stream.ResetStream()
 
 	var pointer = 1

@@ -1,7 +1,5 @@
 package protocol
 
-import "github.com/irmine/goraklib/protocol/identifiers"
-
 type ConnectionAccept struct {
 	*Packet
 	ClientAddress    string
@@ -15,7 +13,7 @@ type ConnectionAccept struct {
 
 func NewConnectionAccept() *ConnectionAccept {
 	return &ConnectionAccept{NewPacket(
-		identifiers.ConnectionAccept,
+		IdConnectionAccept,
 	), "", 0, 0, 0, []string{"127.0.0.1"}, []uint16{0}, []byte{4}}
 }
 

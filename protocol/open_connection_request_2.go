@@ -1,9 +1,5 @@
 package protocol
 
-import (
-	"github.com/irmine/goraklib/protocol/identifiers"
-)
-
 type OpenConnectionRequest2 struct {
 	*UnconnectedMessage
 	ServerAddress string
@@ -14,7 +10,7 @@ type OpenConnectionRequest2 struct {
 
 func NewOpenConnectionRequest2() *OpenConnectionRequest2 {
 	return &OpenConnectionRequest2{NewUnconnectedMessage(NewPacket(
-		identifiers.OpenConnectionRequest2,
+		IdOpenConnectionRequest2,
 	)), "", 0, 0, 0}
 }
 
