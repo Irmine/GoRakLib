@@ -41,12 +41,11 @@ func (server *UDPServer) HasStarted() bool {
 // Read reads any data from the UDP connection into the given byte array.
 // The IP address and port of the client that sent the data will be returned,
 // along with an error that might have occurred during reading.
-func (server *UDPServer) Read(buffer []byte) (addr *net.UDPAddr, err error) {
+func (server *UDPServer) Read(buffer []byte) (bytesRead int, addr *net.UDPAddr, err error) {
 	if !server.HasStarted() {
-		return nil, NotStarted
+		return 0, nil, NotStarted
 	}
-	n, addr, err := server.UDPConn.ReadFromUDP(buffer)
-	buffer = buffer[:n]
+	bytesRead, addr, err = server.UDPConn.ReadFromUDP(buffer)
 	return
 }
 

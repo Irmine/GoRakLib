@@ -8,11 +8,12 @@ func getPacketFor(buffer []byte, hasSession bool) protocol.IPacket {
 	header := buffer[0]
 	var packet protocol.IPacket
 	if hasSession {
-		if header & protocol.BitFlagIsAck != 0 {
+		switch {
+		case header & protocol.BitFlagIsAck != 0:
 			packet = protocol.NewACK()
-		} else if header & protocol.BitFlagIsNak != 0 {
+		case header & protocol.BitFlagIsNak != 0:
 			packet = protocol.NewNAK()
-		} else if header & protocol.BitFlagValid != 0 {
+		case header & protocol.BitFlagValid != 0:
 			packet = protocol.NewDatagram()
 		}
 	} else {
@@ -29,5 +30,6 @@ func getPacketFor(buffer []byte, hasSession bool) protocol.IPacket {
 		packet = NewRawPacket()
 	}
 	packet.SetBuffer(buffer)
+	packet.Decode()
 	return packet
 }

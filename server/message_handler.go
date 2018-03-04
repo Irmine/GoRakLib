@@ -4,6 +4,7 @@ import (
 	"github.com/irmine/goraklib/protocol"
 	"net"
 	"time"
+	"fmt"
 )
 
 // HandleUnconnectedMessage handles an incoming unconnected message from a UDPAddr.
@@ -34,21 +35,33 @@ func handleUnconnectedPing(addr *net.UDPAddr, manager *Manager) {
 // handleOpenConnectionRequest1 handles an open connection request 1.
 // An open connection response 1 is sent back with the MTU size and security.
 func handleOpenConnectionRequest1(request *protocol.OpenConnectionRequest1, addr *net.UDPAddr, manager *Manager) {
-	response := protocol.NewOpenConnectionReply1()
-	response.ServerId = manager.serverId
-	response.MtuSize = request.MtuSize
-	response.Security = manager.Security
-	response.Encode()
-	manager.Server.Write(response.Buffer, addr)
+	println("Request 1")
+	reply := protocol.NewOpenConnectionReply1()
+	reply.ServerId = manager.serverId
+	reply.MtuSize = request.MtuSize
+	reply.Security = manager.Security
+	reply.Encode()
+	manager.Server.Write(reply.Buffer, addr)
 }
 
 // handleOpenConnectionRequest2 handles an open connection request 2.
 // An open connection response 2 is sent back, with the definite MTU size and encryption.
 func handleOpenConnectionRequest2(request *protocol.OpenConnectionRequest2, addr *net.UDPAddr, manager *Manager) {
-	response := protocol.NewOpenConnectionReply2()
-	response.ServerId = manager.serverId
-	response.MtuSize = request.MtuSize
-	response.UseEncryption = manager.Encryption
-	response.ClientAddress = addr.IP.String()
-	response.ClientPort = uint16(addr.Port)
+	println("Request 2")
+	reply := protocol.NewOpenConnectionReply2()
+	reply.ServerId = manager.serverId
+	if request.MtuSize < MinimumMTUSize {
+		request.MtuSize = MinimumMTUSize
+	} else if request.MtuSize > MaximumMTUSize {
+		request.MtuSize = MaximumMTUSize
+	}
+	reply.MtuSize = request.MtuSize
+	reply.UseEncryption = manager.Encryption
+	reply.ClientAddress = addr.IP.String()
+	reply.ClientPort = uint16(addr.Port)
+
+	reply.Encode()
+
+	manager.Sessions[fmt.Sprint(addr)] = NewSession(addr, request.MtuSize, manager)
+	manager.Server.Write(reply.Buffer, addr)
 }

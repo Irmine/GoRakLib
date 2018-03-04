@@ -5,10 +5,16 @@ import (
 	"time"
 	"math/rand"
 	"github.com/irmine/goraklib/protocol"
+	"encoding/hex"
+	"fmt"
 )
 
 const (
+	// Maximum MTU size is the maximum packet size.
+	// Any MTU size above this will get limited to the maximum.
 	MaximumMTUSize = 1492
+	// MinimumMTUSize is the minimum packet size.
+	// Any MTU size below this will get set to the minimum.
 	MinimumMTUSize = 400
 )
 
@@ -27,14 +33,14 @@ type Manager struct {
 	Encryption bool
 	// serverId is a random ID to identify servers. It is randomly generated for each manager.
 	serverId int64
-	// Running
+	// Running specifies the running state of the manager.
 	Running bool
 
 	// RawPacketFunction gets called when a raw packet is processed.
 	// The address given is the address of the sender.
 	RawPacketFunction    func(packet RawPacket, addr *net.UDPAddr)
 	// EncapsulatedFunction gets called once an encapsulated packet is fully processed.
-	// Only encapsulated packets not recognized as RakNet internal packets get called.
+	// This function only gets called for encapsulated packets not recognized as RakNet internal packets.
 	EncapsulatedFunction func(packet protocol.EncapsulatedPacket, session *Session)
 }
 
@@ -57,6 +63,7 @@ func (manager *Manager) Start(address string, port int) error {
 			manager.processIncomingPacket()
 		}
 	}()
+	go manager.tickSessions()
 
 	return err
 }
@@ -66,29 +73,51 @@ func (manager *Manager) Stop() {
 	manager.Running = false
 }
 
+// tickSessions makes the server start ticking its sessions.
+// Sessions get ticked on an interval of 80 ticks per second.
+func (manager *Manager) tickSessions() {
+	ticker := time.NewTicker(time.Duration(float32(time.Second) / 12.5))
+	for range ticker.C {
+		if !manager.Running {
+			return
+		}
+		for _, session := range manager.Sessions {
+			go session.Tick()
+		}
+	}
+}
+
 // processIncomingPacket processes any incoming packet from the UDP server.
 func (manager *Manager) processIncomingPacket() {
-	buffer := make([]byte, 8192)
-	addr, err := manager.Server.Read(buffer)
+	buffer := make([]byte, 2048)
+	n, addr, err := manager.Server.Read(buffer)
+	buffer = buffer[:n]
+
 	if err != nil {
 		return
 	}
+	manager.Sessions.SessionExists(addr)
 	packet := getPacketFor(buffer, manager.Sessions.SessionExists(addr))
 	if raw, ok := packet.(RawPacket); ok {
+		println(hex.EncodeToString(packet.GetBuffer()))
 		manager.RawPacketFunction(raw, addr)
 		return
 	}
 	if packet.HasMagic() {
 		HandleUnconnectedMessage(packet, addr, manager)
 	} else {
-		if !manager.Sessions.SessionExists(addr) {
+		session, ok := manager.Sessions.GetSession(addr)
+		if !ok {
 			return
+		}
+		if datagram, ok := packet.(*protocol.Datagram); ok {
+			session.ReceiveWindow.AddDatagram(datagram)
 		}
 	}
 }
 
 // SessionManager is a manager of all sessions in the Manager.
-type SessionManager map[*net.UDPAddr]*Session
+type SessionManager map[string]*Session
 
 // NewSessionManager returns a new session manager.
 func NewSessionManager() SessionManager {
@@ -97,6 +126,13 @@ func NewSessionManager() SessionManager {
 
 // SessionExists checks if the session manager has a session with a UDPAddr.
 func (manager SessionManager) SessionExists(addr *net.UDPAddr) bool {
-	_, ok := manager[addr]
+	_, ok := manager[fmt.Sprint(addr)]
 	return ok
+}
+
+// GetSession returns a session by a UDP address.
+// GetSession also returns a bool indicating success of the call.
+func (manager SessionManager) GetSession(addr *net.UDPAddr) (*Session, bool) {
+	session, ok := manager[fmt.Sprint(addr)]
+	return session, ok
 }
