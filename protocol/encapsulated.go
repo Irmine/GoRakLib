@@ -5,7 +5,7 @@ import (
 )
 
 const (
-	ReliabilityUnreliable = iota
+	ReliabilityUnreliable byte = iota
 	ReliabilityUnreliableSequenced
 	ReliabilityReliable
 	ReliabilityReliableOrdered
@@ -19,8 +19,6 @@ const (
 
 type EncapsulatedPacket struct {
 	*Packet
-	Pk IConnectedPacket
-
 	Reliability  byte
 	HasSplit     bool
 	Length       uint
@@ -33,7 +31,7 @@ type EncapsulatedPacket struct {
 }
 
 func NewEncapsulatedPacket() *EncapsulatedPacket {
-	var packet = EncapsulatedPacket{NewPacket(0), nil, 0, false, 0, 0, 0, 0, 0, 0, 0}
+	var packet = EncapsulatedPacket{NewPacket(0), 0, false, 0, 0, 0, 0, 0, 0, 0}
 	return &packet
 }
 
