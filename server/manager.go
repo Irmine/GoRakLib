@@ -57,7 +57,12 @@ type Manager struct {
 // A random server ID gets generated.
 func NewManager() *Manager {
 	rand.Seed(time.Now().Unix())
-	return &Manager{Server: NewUDPServer(), Sessions: NewSessionManager(), ServerId: rand.Int63()}
+	return &Manager{Server: NewUDPServer(), Sessions: NewSessionManager(), ServerId: rand.Int63(),
+		RawPacketFunction: func(packet []byte, addr *net.UDPAddr) {},
+		PacketFunction: func(packet []byte, session *Session) {},
+		ConnectFunction: func(session *Session) {},
+		DisconnectFunction: func(session *Session) {},
+	}
 }
 
 // Start starts the UDP server on the given address and port.
