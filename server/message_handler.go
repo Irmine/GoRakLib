@@ -26,7 +26,7 @@ func HandleUnconnectedMessage(packetInterface protocol.IPacket, addr *net.UDPAdd
 func handleUnconnectedPing(addr *net.UDPAddr, manager *Manager) {
 	pong := protocol.NewUnconnectedPong()
 	pong.PingTime = time.Now().Unix()
-	pong.ServerId = manager.serverId
+	pong.ServerId = manager.ServerId
 	pong.PongData = manager.PongData
 	pong.Encode()
 	manager.Server.Write(pong.Buffer, addr)
@@ -35,9 +35,8 @@ func handleUnconnectedPing(addr *net.UDPAddr, manager *Manager) {
 // handleOpenConnectionRequest1 handles an open connection request 1.
 // An open connection response 1 is sent back with the MTU size and security.
 func handleOpenConnectionRequest1(request *protocol.OpenConnectionRequest1, addr *net.UDPAddr, manager *Manager) {
-	println("Request 1")
 	reply := protocol.NewOpenConnectionReply1()
-	reply.ServerId = manager.serverId
+	reply.ServerId = manager.ServerId
 	reply.MtuSize = request.MtuSize
 	reply.Security = manager.Security
 	reply.Encode()
@@ -47,9 +46,8 @@ func handleOpenConnectionRequest1(request *protocol.OpenConnectionRequest1, addr
 // handleOpenConnectionRequest2 handles an open connection request 2.
 // An open connection response 2 is sent back, with the definite MTU size and encryption.
 func handleOpenConnectionRequest2(request *protocol.OpenConnectionRequest2, addr *net.UDPAddr, manager *Manager) {
-	println("Request 2")
 	reply := protocol.NewOpenConnectionReply2()
-	reply.ServerId = manager.serverId
+	reply.ServerId = manager.ServerId
 	if request.MtuSize < MinimumMTUSize {
 		request.MtuSize = MinimumMTUSize
 	} else if request.MtuSize > MaximumMTUSize {

@@ -5,7 +5,6 @@ import (
 	"time"
 	"math/rand"
 	"github.com/irmine/goraklib/protocol"
-	"encoding/hex"
 	"fmt"
 )
 
@@ -31,24 +30,34 @@ type Manager struct {
 	// Encryption encrypts all packets sent over RakNet.
 	// Encryption should be disabled if used for Minecraft.
 	Encryption bool
-	// serverId is a random ID to identify servers. It is randomly generated for each manager.
-	serverId int64
+	// ServerId is a random ID to identify servers. It is randomly generated for each manager.
+	ServerId int64
 	// Running specifies the running state of the manager.
 	Running bool
+	// CurrentTick is the current tick of the manager. This current Tick increments for every
+	// time the manager ticks.
+	CurrentTick int64
 
 	// RawPacketFunction gets called when a raw packet is processed.
-	// The address given is the address of the sender.
-	RawPacketFunction    func(packet RawPacket, addr *net.UDPAddr)
-	// EncapsulatedFunction gets called once an encapsulated packet is fully processed.
+	// The address given is the address of the sender, and the byte array the buffer of the packet.
+	RawPacketFunction    func(packet []byte, addr *net.UDPAddr)
+	// PacketFunction gets called once an encapsulated packet is fully processed.
 	// This function only gets called for encapsulated packets not recognized as RakNet internal packets.
-	EncapsulatedFunction func(packet protocol.EncapsulatedPacket, session *Session)
+	// A byte array argument gets passed, which is the buffer of the buffer in the encapsulated packet.
+	PacketFunction 		 func(packet []byte, session *Session)
+	// ConnectFunction gets called once a session is fully connected to the server,
+	// and packets of the game protocol start to get sent.
+	ConnectFunction		 func(session *Session)
+	// DisconnectFunction gets called with the associated session on a disconnect.
+	// This disconnect may be either client initiated or server initiated.
+	DisconnectFunction	 func(session *Session)
 }
 
 // NewManager returns a new Manager for a UDP Server.
 // A random server ID gets generated.
 func NewManager() *Manager {
 	rand.Seed(time.Now().Unix())
-	return &Manager{Server: NewUDPServer(), Sessions: NewSessionManager(), serverId: rand.Int63()}
+	return &Manager{Server: NewUDPServer(), Sessions: NewSessionManager(), ServerId: rand.Int63()}
 }
 
 // Start starts the UDP server on the given address and port.
@@ -82,12 +91,14 @@ func (manager *Manager) tickSessions() {
 			return
 		}
 		for _, session := range manager.Sessions {
-			go session.Tick()
+			go session.Tick(manager.CurrentTick)
 		}
+		manager.CurrentTick++
 	}
 }
 
 // processIncomingPacket processes any incoming packet from the UDP server.
+// Unconnected messages get handled freely, while any other packet gets passed to its owner session.
 func (manager *Manager) processIncomingPacket() {
 	buffer := make([]byte, 2048)
 	n, addr, err := manager.Server.Read(buffer)
@@ -99,8 +110,7 @@ func (manager *Manager) processIncomingPacket() {
 	manager.Sessions.SessionExists(addr)
 	packet := getPacketFor(buffer, manager.Sessions.SessionExists(addr))
 	if raw, ok := packet.(RawPacket); ok {
-		println(hex.EncodeToString(packet.GetBuffer()))
-		manager.RawPacketFunction(raw, addr)
+		manager.RawPacketFunction(raw.Buffer, addr)
 		return
 	}
 	if packet.HasMagic() {

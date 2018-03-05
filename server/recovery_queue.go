@@ -10,7 +10,7 @@ import (
 // The recovery queue holds every datagram sent and releases them,
 // once an ACK is received with the datagram's sequence number.
 type RecoveryQueue struct {
-	mutex sync.Mutex
+	sync.Mutex
 	datagrams map[uint32]*protocol.Datagram
 }
 
@@ -23,28 +23,28 @@ func NewRecoveryQueue() *RecoveryQueue {
 // The recovery will consist until an ACK gets sent by the client,
 // and the datagram is safe to be removed.
 func (queue *RecoveryQueue) AddRecovery(datagram *protocol.Datagram) {
-	queue.mutex.Lock()
+	queue.Lock()
 	queue.datagrams[datagram.SequenceNumber] = datagram
-	queue.mutex.Unlock()
+	queue.Unlock()
 }
 
 // IsRecoverable checks if the datagram with the given sequence number is recoverable.
 func (queue *RecoveryQueue) IsRecoverable(sequenceNumber uint32) bool {
-	queue.mutex.Lock()
+	queue.Lock()
 	_, ok := queue.datagrams[sequenceNumber]
-	queue.mutex.Unlock()
+	queue.Unlock()
 	return ok
 }
 
 // RemoveRecovery removes recovery for all sequence numbers given.
-// Removed datagrams can not be retrieved in anyway,
+// Removed datagrams can not be retrieved in any way,
 // therefore this function should only be used once the client sends an ACK to ensure arrival.
 func (queue *RecoveryQueue) RemoveRecovery(sequenceNumbers []uint32) {
-	queue.mutex.Lock()
+	queue.Lock()
 	for _, sequenceNumber := range sequenceNumbers {
 		delete(queue.datagrams, sequenceNumber)
 	}
-	queue.mutex.Unlock()
+	queue.Unlock()
 }
 
 // Recover recovers all datagrams associated with the sequence numbers in the array given.
@@ -53,11 +53,13 @@ func (queue *RecoveryQueue) RemoveRecovery(sequenceNumbers []uint32) {
 func (queue *RecoveryQueue) Recover(sequenceNumbers []uint32) ([]*protocol.Datagram, []uint32) {
 	var datagrams []*protocol.Datagram
 	var recoveredSequenceNumbers []uint32
+	queue.Lock()
 	for _, sequenceNumber := range sequenceNumbers {
 		if datagram, ok := queue.datagrams[sequenceNumber]; ok {
 			datagrams = append(datagrams, datagram)
 			recoveredSequenceNumbers = append(recoveredSequenceNumbers, sequenceNumber)
 		}
 	}
+	queue.Unlock()
 	return datagrams, sequenceNumbers
 }
