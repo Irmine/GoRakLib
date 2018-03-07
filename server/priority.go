@@ -57,6 +57,9 @@ func (queue *PriorityQueue) Flush(session *Session) {
 	datagram := protocol.NewDatagram()
 	datagram.NeedsBAndAs = true
 	datagrams := map[int]*protocol.Datagram{0: datagram}
+	datagram.SequenceNumber = session.Indexes.sendSequence
+	session.Indexes.sendSequence++
+
 	for len(*queue) > 0 {
 		packet := <-*queue
 		if datagrams[datagramIndex].GetLength()+packet.GetLength() > int(session.MTUSize-36) {
