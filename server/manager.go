@@ -6,6 +6,7 @@ import (
 	"math/rand"
 	"github.com/irmine/goraklib/protocol"
 	"fmt"
+	"sync"
 )
 
 const (
@@ -51,6 +52,11 @@ type Manager struct {
 	// DisconnectFunction gets called with the associated session on a disconnect.
 	// This disconnect may be either client initiated or server initiated.
 	DisconnectFunction	 func(session *Session)
+
+	*sync.RWMutex
+	// ipBlocks is a field containing all blocked addresses.
+	// Blocked addresses are ignored completely; Their packets are not processed.
+	ipBlocks map[string]*net.UDPAddr
 }
 
 // NewManager returns a new Manager for a UDP Server.
@@ -87,6 +93,33 @@ func (manager *Manager) Stop() {
 	manager.Running = false
 }
 
+// BlockIP blocks the IP of the given UDP address,
+// ignoring any further packets until the duration runs out.
+func (manager *Manager) BlockIP(addr *net.UDPAddr, duration time.Duration) {
+	manager.Lock()
+	manager.ipBlocks[fmt.Sprint(addr)] = addr
+	manager.Unlock()
+	time.AfterFunc(duration, func() {
+		manager.UnblockIP(addr)
+	})
+}
+
+// UnblockIP unblocks the IP of the address and allows packets from the address once again.
+func (manager *Manager) UnblockIP(addr *net.UDPAddr) {
+	manager.Lock()
+	delete(manager.ipBlocks, fmt.Sprint(addr))
+	manager.Unlock()
+}
+
+// IsIPBlocked checks if the IP of a UDP address is blocked.
+// If true, packets are not processed of the address.
+func (manager *Manager) IsIPBlocked(addr *net.UDPAddr) bool {
+	manager.RLock()
+	_, ok := manager.ipBlocks[fmt.Sprint(addr)]
+	manager.RUnlock()
+	return ok
+}
+
 // tickSessions makes the server start ticking its sessions.
 // Sessions get ticked on an interval of 80 ticks per second.
 func (manager *Manager) tickSessions() {
@@ -107,13 +140,24 @@ func (manager *Manager) tickSessions() {
 func (manager *Manager) processIncomingPacket() {
 	buffer := make([]byte, 2048)
 	n, addr, err := manager.Server.Read(buffer)
+	if manager.IsIPBlocked(addr) {
+		return
+	}
 	buffer = buffer[:n]
 
 	if err != nil {
 		return
 	}
 	manager.Sessions.SessionExists(addr)
+
+	defer func() {
+		if err := recover(); err != nil {
+			manager.BlockIP(addr, time.Second * 5)
+			fmt.Println("IP blocked of", addr, "for 5 seconds:", err)
+		}
+	}()
 	packet := getPacketFor(buffer, manager.Sessions.SessionExists(addr))
+
 	if raw, ok := packet.(RawPacket); ok {
 		manager.RawPacketFunction(raw.Buffer, addr)
 		return
