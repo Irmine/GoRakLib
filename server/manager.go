@@ -68,6 +68,7 @@ func NewManager() *Manager {
 		PacketFunction: func(packet []byte, session *Session) {},
 		ConnectFunction: func(session *Session) {},
 		DisconnectFunction: func(session *Session) {},
+		RWMutex: &sync.RWMutex{},
 	}
 }
 
