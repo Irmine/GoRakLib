@@ -7,12 +7,14 @@ import (
 	"time"
 	"encoding/hex"
 	"github.com/irmine/goraklib/server"
+	"net"
+	"github.com/irmine/goraklib/protocol"
 )
 
 func Test(t *testing.T) {
 	manager := server.NewManager()
 	manager.Start("0.0.0.0", 19132)
-	manager.PongData = "MCPE;This is the MOTD;201;1.2.10.2;0;20;" + strconv.Itoa(int(manager.ServerId)) + ";GoMine;Creative;"
+	manager.PongData = "MCPE;§e§lTesting §bServer;201;;0;20;" + strconv.Itoa(int(manager.ServerId)) + ";§aVersionless Minecraft Server MOTD;Creative;"
 
 	manager.PacketFunction = func(packet []byte, session *server.Session) {
 		fmt.Println("Packet:", hex.EncodeToString(packet[0:1]))
