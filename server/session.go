@@ -44,20 +44,22 @@ type Indexes struct {
 	splits       map[int16][]*protocol.EncapsulatedPacket
 	splitCounts  map[int16]uint
 	sendSequence uint32
+	messageIndex uint32
+	orderIndex	 uint32 // TODO: Implement proper order channels and indexes.
 }
 
 // NewSession returns a new session with UDP address.
 // The MTUSize provided is the maximum packet size of the session.
 func NewSession(addr *net.UDPAddr, mtuSize int16, manager *Manager) *Session {
 	session := &Session{addr,
-	manager,
-	NewReceiveWindow(),
-	NewRecoveryQueue(),
-	mtuSize,
-	Indexes{sync.Mutex{}, make(map[int16][]*protocol.EncapsulatedPacket), make(map[int16]uint), 0},
-	Queues{NewPriorityQueue(1), NewPriorityQueue(16), NewPriorityQueue(32), NewPriorityQueue(64)},
-	0,
-	0,
+		manager,
+		NewReceiveWindow(),
+		NewRecoveryQueue(),
+		mtuSize,
+		Indexes{sync.Mutex{}, make(map[int16][]*protocol.EncapsulatedPacket), make(map[int16]uint), 0, 0, 0},
+		Queues{NewPriorityQueue(1), NewPriorityQueue(64), NewPriorityQueue(128), NewPriorityQueue(256)},
+		0,
+		0,
 	}
 	session.ReceiveWindow.DatagramHandleFunction = func(datagram TimestampedDatagram) {
 		session.SendACK(datagram.SequenceNumber)
@@ -199,9 +201,16 @@ func (session *Session) Tick(currentTick int64) {
 func (session *Session) SendPacket(packet protocol.IConnectedPacket, reliability byte, priority Priority) {
 	packet.Encode()
 	encapsulated := protocol.NewEncapsulatedPacket()
-	encapsulated.OrderChannel = 0
 	encapsulated.Reliability = reliability
 	encapsulated.Buffer = packet.GetBuffer()
+	if encapsulated.IsReliable() {
+		encapsulated.MessageIndex = session.Indexes.messageIndex
+		session.Indexes.messageIndex++
+	}
+	if encapsulated.IsSequenced() {
+		encapsulated.OrderIndex = session.Indexes.orderIndex
+		session.Indexes.orderIndex++
+	}
 	session.Queues.AddEncapsulated(encapsulated, priority, session)
 }
 
