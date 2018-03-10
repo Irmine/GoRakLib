@@ -26,6 +26,8 @@ type Session struct {
 	ClientId 	uint64
 	// CurrentPing is the current latency of the session.
 	CurrentPing int64
+	// LastUpdate is the last update time of the session.
+	LastUpdate	time.Time
 }
 
 // Queues is a container of four priority queues.
@@ -60,12 +62,33 @@ func NewSession(addr *net.UDPAddr, mtuSize int16, manager *Manager) *Session {
 		Queues{NewPriorityQueue(1), NewPriorityQueue(64), NewPriorityQueue(128), NewPriorityQueue(256)},
 		0,
 		0,
+		time.Now(),
 	}
 	session.ReceiveWindow.DatagramHandleFunction = func(datagram TimestampedDatagram) {
+		session.LastUpdate = time.Now()
 		session.SendACK(datagram.SequenceNumber)
 		session.HandleDatagram(datagram)
 	}
 	return session
+}
+
+// Close removes all references of the session,
+// and removes the capability to send and handle packets.
+// Sessions can not be opened once closed.
+func (session *Session) Close() {
+	session.UDPAddr = nil
+	session.Manager = nil
+	session.ReceiveWindow = nil
+	session.RecoveryQueue = nil
+	session.Indexes = Indexes{}
+	session.Queues = Queues{}
+}
+
+// IsClosed checks if the session is closed.
+// Sending and handling packets for a session is
+// impossible once the session is closed.
+func (session *Session) IsClosed() bool {
+	return session.UDPAddr == nil
 }
 
 // Send sends the given buffer to the session over UDP.

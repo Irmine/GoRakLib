@@ -34,10 +34,15 @@ type Manager struct {
 	// ServerId is a random ID to identify servers. It is randomly generated for each manager.
 	ServerId int64
 	// Running specifies the running state of the manager.
+	// The manager will automatically stop working if the running state is false.
 	Running bool
 	// CurrentTick is the current tick of the manager. This current Tick increments for every
 	// time the manager ticks.
 	CurrentTick int64
+	// TimeoutDuration is the duration after which a session gets timed out.
+	// Timed out sessions get closed and removed immediately.
+	// The default timeout duration is 5 seconds.
+	TimeoutDuration time.Duration
 
 	// RawPacketFunction gets called when a raw packet is processed.
 	// The address given is the address of the sender, and the byte array the buffer of the packet.
@@ -69,6 +74,7 @@ func NewManager() *Manager {
 		ConnectFunction: func(session *Session) {},
 		DisconnectFunction: func(session *Session) {},
 		RWMutex: &sync.RWMutex{},
+		TimeoutDuration: time.Second * 5,
 	}
 }
 
@@ -129,7 +135,14 @@ func (manager *Manager) tickSessions() {
 		if !manager.Running {
 			return
 		}
-		for _, session := range manager.Sessions {
+		for index, session := range manager.Sessions {
+			if time.Now().Sub(session.LastUpdate) > manager.TimeoutDuration {
+				session.Close()
+			}
+			if session.IsClosed() {
+				delete(manager.Sessions, index)
+				return
+			}
 			go session.Tick(manager.CurrentTick)
 		}
 		manager.CurrentTick++
