@@ -104,7 +104,7 @@ func (manager *Manager) Stop() {
 // ignoring any further packets until the duration runs out.
 func (manager *Manager) BlockIP(addr *net.UDPAddr, duration time.Duration) {
 	manager.Lock()
-	manager.ipBlocks[fmt.Sprint(addr)] = addr
+	manager.ipBlocks[fmt.Sprint(addr.IP)] = addr
 	manager.Unlock()
 	time.AfterFunc(duration, func() {
 		manager.UnblockIP(addr)
@@ -114,7 +114,7 @@ func (manager *Manager) BlockIP(addr *net.UDPAddr, duration time.Duration) {
 // UnblockIP unblocks the IP of the address and allows packets from the address once again.
 func (manager *Manager) UnblockIP(addr *net.UDPAddr) {
 	manager.Lock()
-	delete(manager.ipBlocks, fmt.Sprint(addr))
+	delete(manager.ipBlocks, fmt.Sprint(addr.IP))
 	manager.Unlock()
 }
 
@@ -122,7 +122,7 @@ func (manager *Manager) UnblockIP(addr *net.UDPAddr) {
 // If true, packets are not processed of the address.
 func (manager *Manager) IsIPBlocked(addr *net.UDPAddr) bool {
 	manager.RLock()
-	_, ok := manager.ipBlocks[fmt.Sprint(addr)]
+	_, ok := manager.ipBlocks[fmt.Sprint(addr.IP)]
 	manager.RUnlock()
 	return ok
 }
@@ -130,13 +130,14 @@ func (manager *Manager) IsIPBlocked(addr *net.UDPAddr) bool {
 // tickSessions makes the server start ticking its sessions.
 // Sessions get ticked on an interval of 80 ticks per second.
 func (manager *Manager) tickSessions() {
-	ticker := time.NewTicker(time.Duration(float32(time.Second) / 12.5))
+	ticker := time.NewTicker(time.Duration(float32(time.Second) / 80))
 	for range ticker.C {
 		if !manager.Running {
 			return
 		}
 		for index, session := range manager.Sessions {
 			if time.Now().Sub(session.LastUpdate) > manager.TimeoutDuration {
+				manager.DisconnectFunction(session)
 				session.Close()
 			}
 			if session.IsClosed() {
@@ -185,6 +186,10 @@ func (manager *Manager) processIncomingPacket() {
 		}
 		if datagram, ok := packet.(*protocol.Datagram); ok {
 			session.ReceiveWindow.AddDatagram(datagram)
+		} else if ack, ok := packet.(*protocol.ACK); ok {
+			session.HandleACK(ack)
+		} else if nack, ok := packet.(*protocol.NAK); ok {
+			session.HandleNACK(nack)
 		}
 	}
 }
