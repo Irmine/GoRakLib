@@ -2,6 +2,7 @@ package server
 
 import (
 	"github.com/irmine/goraklib/protocol"
+	"math"
 )
 
 const (
@@ -53,26 +54,30 @@ func (queue *PriorityQueue) Flush(session *Session) {
 	if len(*queue) == 0 {
 		return
 	}
-	datagramIndex := 0
+	ind := 0
 	datagram := protocol.NewDatagram()
 	datagram.NeedsBAndAs = true
 	datagrams := map[int]*protocol.Datagram{0: datagram}
 	datagram.SequenceNumber = session.Indexes.sendSequence
 	session.Indexes.sendSequence++
 
-	for len(*queue) > 0 {
+	i := 0
+	for len(*queue) > 0 && i < 16 {
+		i++
 		packet := <-*queue
-		if datagrams[datagramIndex].GetLength()+packet.GetLength() > int(session.MTUSize-36) {
-			datagrams[datagramIndex].Encode()
-			datagramIndex++
-			datagrams[datagramIndex] = protocol.NewDatagram()
-			datagrams[datagramIndex].NeedsBAndAs = true
-			datagrams[datagramIndex].SequenceNumber = session.Indexes.sendSequence
+		if datagrams[ind].GetLength()+packet.GetLength() > int(session.MTUSize-38) {
+			ind++
+			datagrams[ind] = protocol.NewDatagram()
+			datagrams[ind].NeedsBAndAs = true
+			datagrams[ind].SequenceNumber = session.Indexes.sendSequence
 			session.Indexes.sendSequence++
 		}
-		datagrams[datagramIndex].AddPacket(packet)
+		datagrams[ind].AddPacket(packet)
 	}
-	for _, datagram := range datagrams {
+
+	l := len(datagrams)
+	for j := 0; j < l; j++ {
+		datagram := datagrams[j]
 		datagram.Encode()
 		session.RecoveryQueue.AddRecovery(datagram)
 		session.Manager.Server.Write(datagram.Buffer, session.UDPAddr)
@@ -83,32 +88,46 @@ func (queue *PriorityQueue) Flush(session *Session) {
 // Every encapsulated packet that exceeds the MTUSize of the session
 // will be split into sub packets, and returned into a slice.
 func (queue *PriorityQueue) Split(packet *protocol.EncapsulatedPacket, session *Session) []*protocol.EncapsulatedPacket {
-	mtuSize := session.MTUSize - 60 // We subtract 60 to account for the headers of datagrams and encapsulated packets.
+	mtuSize := int(session.MTUSize - 60) // We subtract 60 to account for headers.
 	var packets []*protocol.EncapsulatedPacket
-	if int16(packet.GetLength()) > mtuSize {
+	if packet.IsSequenced() {
+		packet.OrderIndex = session.Indexes.orderIndex
+		session.Indexes.orderIndex++
+	}
+
+	if packet.GetLength() > mtuSize {
 		buffer := packet.GetBuffer()
-		var splitBuffers [][]byte
-		var split []byte
-		for int16(len(buffer)) >= mtuSize {
-			split, buffer = buffer[:mtuSize], buffer[mtuSize:]
-			splitBuffers = append(splitBuffers, split)
-		}
-		splitBuffers = append(splitBuffers, buffer)
-		for index, splitBuffer := range splitBuffers {
+		splitSize := mtuSize
+		var b uint
+		for i := 0; i < len(buffer)+splitSize; i += splitSize {
+			if i + splitSize >= len(buffer) {
+				splitSize = len(buffer) - i
+				if splitSize == 0 {
+					break
+				}
+			}
+			split := buffer[i:i+splitSize]
 			encapsulated := protocol.NewEncapsulatedPacket()
 			encapsulated.HasSplit = true
-			encapsulated.SplitId = int16(index)
-			encapsulated.SplitIndex = uint(index)
-			encapsulated.SplitCount = uint(len(splitBuffers))
+			encapsulated.SplitId = session.Indexes.splitId
+			encapsulated.SplitIndex = b
+			encapsulated.SplitCount = uint(math.Ceil(float64(len(buffer)) / float64(splitSize)))
 			encapsulated.Reliability = packet.Reliability
-			encapsulated.MessageIndex = packet.MessageIndex + uint32(index)
-			encapsulated.Buffer = splitBuffer
-			encapsulated.OrderChannel = packet.OrderChannel
+			b++
+			encapsulated.Buffer = split
 			encapsulated.OrderIndex = packet.OrderIndex
-
+			if packet.IsReliable() {
+				encapsulated.MessageIndex = session.Indexes.messageIndex
+				session.Indexes.messageIndex++
+			}
 			packets = append(packets, encapsulated)
 		}
+		session.Indexes.splitId++
 	} else {
+		if packet.IsReliable() {
+			packet.MessageIndex = session.Indexes.messageIndex
+			session.Indexes.messageIndex++
+		}
 		packets = append(packets, packet)
 	}
 	return packets

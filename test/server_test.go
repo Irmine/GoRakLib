@@ -7,8 +7,6 @@ import (
 	"time"
 	"encoding/hex"
 	"github.com/irmine/goraklib/server"
-	"net"
-	"github.com/irmine/goraklib/protocol"
 )
 
 func Test(t *testing.T) {
@@ -20,6 +18,7 @@ func Test(t *testing.T) {
 		fmt.Println("Packet:", hex.EncodeToString(packet[0:1]))
 	}
 	manager.ConnectFunction = func(session *server.Session) {
+		manager.BlockIP(session.UDPAddr, time.Second * 20)
 		fmt.Println(session, "connected!")
 	}
 	manager.DisconnectFunction = func(session *server.Session) {

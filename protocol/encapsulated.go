@@ -139,7 +139,7 @@ func (packet *EncapsulatedPacket) GetLength() int {
 		length += 4
 	}
 	if packet.HasSplit {
-		length += 2
+		length += 10
 	}
 	return length
 }

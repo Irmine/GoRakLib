@@ -48,16 +48,16 @@ func (window *ReceiveWindow) AddDatagram(datagram *protocol.Datagram) {
 // Tick also fetches all datagrams that are currently in the channel.
 func (window *ReceiveWindow) Tick() {
 	for len(window.pendingDatagrams) > 0 {
-		var datagram = <-window.pendingDatagrams
+		datagram := <-window.pendingDatagrams
 		window.datagrams[datagram.SequenceNumber] = datagram
 	}
 	for i := window.expectedSequenceNumber;; i++ {
 		if datagram, ok := window.datagrams[i]; ok {
-			window.DatagramHandleFunction(datagram)
+			go window.DatagramHandleFunction(datagram)
 			window.expectedSequenceNumber++
 			delete(window.datagrams, i)
 		} else {
-			break
+			return
 		}
 	}
 }

@@ -28,6 +28,9 @@ type Session struct {
 	CurrentPing int64
 	// LastUpdate is the last update time of the session.
 	LastUpdate	time.Time
+	// FlaggedForClose indicates if this session has been flagged to close.
+	// Sessions flagged for close will be closed next tick safely.
+	FlaggedForClose bool
 }
 
 // Queues is a container of four priority queues.
@@ -45,6 +48,7 @@ type Indexes struct {
 	sync.Mutex
 	splits       map[int16][]*protocol.EncapsulatedPacket
 	splitCounts  map[int16]uint
+	splitId 	 int16
 	sendSequence uint32
 	messageIndex uint32
 	orderIndex	 uint32 // TODO: Implement proper order channels and indexes.
@@ -58,11 +62,12 @@ func NewSession(addr *net.UDPAddr, mtuSize int16, manager *Manager) *Session {
 		NewReceiveWindow(),
 		NewRecoveryQueue(),
 		mtuSize,
-		Indexes{sync.Mutex{}, make(map[int16][]*protocol.EncapsulatedPacket), make(map[int16]uint), 0, 0, 0},
-		Queues{NewPriorityQueue(1), NewPriorityQueue(64), NewPriorityQueue(128), NewPriorityQueue(256)},
+		Indexes{sync.Mutex{}, make(map[int16][]*protocol.EncapsulatedPacket), make(map[int16]uint), 0, 0, 0, 0},
+		Queues{NewPriorityQueue(1), NewPriorityQueue(256), NewPriorityQueue(256), NewPriorityQueue(256)},
 		0,
 		0,
 		time.Now(),
+		false,
 	}
 	session.ReceiveWindow.DatagramHandleFunction = func(datagram TimestampedDatagram) {
 		session.LastUpdate = time.Now()
@@ -75,13 +80,23 @@ func NewSession(addr *net.UDPAddr, mtuSize int16, manager *Manager) *Session {
 // Close removes all references of the session,
 // and removes the capability to send and handle packets.
 // Sessions can not be opened once closed.
+// It is strongly unrecommended to use this function directly.
+// Use FlagForClose instead.
 func (session *Session) Close() {
+	session.Manager.DisconnectFunction(session)
 	session.UDPAddr = nil
 	session.Manager = nil
 	session.ReceiveWindow = nil
 	session.RecoveryQueue = nil
 	session.Indexes = Indexes{}
 	session.Queues = Queues{}
+}
+
+// FlagForClose flags the session for close.
+// It is always recommended to use this function over direct Close.
+// Sessions flagged for close will be closed the next tick.
+func (session *Session) FlagForClose() {
+	session.FlaggedForClose = true
 }
 
 // IsClosed checks if the session is closed.
@@ -119,9 +134,31 @@ func (session *Session) HandleDatagram(datagram TimestampedDatagram) {
 	}
 }
 
+// HandleACK handles an incoming ACK packet.
+// Recovery gets removed for every datagram with a sequence number in the ACK.
+func (session *Session) HandleACK(ack *protocol.ACK) {
+	session.RecoveryQueue.RemoveRecovery(ack.Packets)
+}
+
+// HandleNACK handles an incoming NACK packet.
+// All packets requested in the NACK get resent to the client.
+func (session *Session) HandleNACK(nack *protocol.NAK) {
+	fmt.Println("NACK with:", nack.Packets)
+	for _, seq := range nack.Packets {
+		if !session.RecoveryQueue.IsRecoverable(seq) {
+			fmt.Println("Unrecoverable datagram:", seq, "(", nack.Packets, ")")
+		}
+	}
+	datagrams, _ := session.RecoveryQueue.Recover(nack.Packets)
+	for _, datagram := range datagrams {
+		session.Manager.Server.Write(datagram.Buffer, session.UDPAddr)
+	}
+}
+
 // HandleEncapsulated handles an encapsulated packet from a datagram.
 // A timestamp is passed, which is the timestamp of which the datagram received in the receive window.
 func (session *Session) HandleEncapsulated(packet *protocol.EncapsulatedPacket, timestamp int64) {
+	session.LastUpdate = time.Now()
 	switch packet.Buffer[0] {
 	case protocol.IdConnectionRequest:
 		session.HandleConnectionRequest(packet)
@@ -132,8 +169,7 @@ func (session *Session) HandleEncapsulated(packet *protocol.EncapsulatedPacket, 
 	case protocol.IdConnectedPong:
 		session.HandleConnectedPong(packet, timestamp)
 	case protocol.IdDisconnectNotification:
-		session.Manager.DisconnectFunction(session)
-		delete(session.Manager.Sessions, fmt.Sprint(session.UDPAddr))
+		session.FlagForClose()
 	default:
 		session.Manager.PacketFunction(packet.Buffer, session)
 	}
@@ -174,7 +210,7 @@ func (session *Session) HandleConnectionRequest(packet *protocol.EncapsulatedPac
 	accept.ClientAddress = session.UDPAddr.IP.String()
 	accept.ClientPort = uint16(session.UDPAddr.Port)
 
-	accept.PingSendTime = request.PingSendTime
+	accept.PingSendTime = uint64(time.Now().Unix())
 	accept.PongSendTime = uint64(time.Now().Unix())
 
 	session.SendPacket(accept, protocol.ReliabilityReliableOrdered, PriorityImmediate)
@@ -208,9 +244,14 @@ func (session *Session) HandleSplitEncapsulated(packet *protocol.EncapsulatedPac
 // Tick ticks the session and processes the receive window and priority queues.
 // currentTick is the current tick of the server, which increments every time this function is ran.
 func (session *Session) Tick(currentTick int64) {
-	session.ReceiveWindow.Tick()
 	session.Queues.High.Flush(session)
+	if currentTick % 400 == 0 {
+		ping := protocol.NewConnectedPing()
+		ping.PingSendTime = time.Now().Unix()
+		session.SendPacket(ping, protocol.ReliabilityUnreliable, PriorityLow)
+	}
 	if currentTick % 2 == 0 {
+		session.ReceiveWindow.Tick()
 		session.Queues.Medium.Flush(session)
 	}
 	if currentTick % 4 == 0 {
@@ -226,14 +267,6 @@ func (session *Session) SendPacket(packet protocol.IConnectedPacket, reliability
 	encapsulated := protocol.NewEncapsulatedPacket()
 	encapsulated.Reliability = reliability
 	encapsulated.Buffer = packet.GetBuffer()
-	if encapsulated.IsReliable() {
-		encapsulated.MessageIndex = session.Indexes.messageIndex
-		session.Indexes.messageIndex++
-	}
-	if encapsulated.IsSequenced() {
-		encapsulated.OrderIndex = session.Indexes.orderIndex
-		session.Indexes.orderIndex++
-	}
 	session.Queues.AddEncapsulated(encapsulated, priority, session)
 }
 

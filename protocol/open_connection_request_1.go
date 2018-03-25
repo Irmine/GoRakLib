@@ -17,7 +17,7 @@ func (request *OpenConnectionRequest1) Encode() {
 	request.PutMagic()
 	request.PutByte(request.Protocol)
 
-	var bytes = make([]byte, request.MtuSize+18)
+	bytes := make([]byte, request.MtuSize+28)
 	request.PutBytes(bytes)
 }
 
@@ -25,5 +25,5 @@ func (request *OpenConnectionRequest1) Decode() {
 	request.DecodeStep()
 	request.ReadMagic()
 	request.Protocol = request.GetByte()
-	request.MtuSize = int16(len(request.Get(-1)) + 18)
+	request.MtuSize = int16(len(request.Buffer)) + 28 // Account for UDP and IP headers.
 }

@@ -41,7 +41,7 @@ type Manager struct {
 	CurrentTick int64
 	// TimeoutDuration is the duration after which a session gets timed out.
 	// Timed out sessions get closed and removed immediately.
-	// The default timeout duration is 5 seconds.
+	// The default timeout duration is 6 seconds.
 	TimeoutDuration time.Duration
 
 	// RawPacketFunction gets called when a raw packet is processed.
@@ -73,8 +73,9 @@ func NewManager() *Manager {
 		PacketFunction: func(packet []byte, session *Session) {},
 		ConnectFunction: func(session *Session) {},
 		DisconnectFunction: func(session *Session) {},
+		ipBlocks: make(map[string]*net.UDPAddr),
 		RWMutex: &sync.RWMutex{},
-		TimeoutDuration: time.Second * 5,
+		TimeoutDuration: time.Second * 6,
 	}
 }
 
@@ -130,23 +131,30 @@ func (manager *Manager) IsIPBlocked(addr *net.UDPAddr) bool {
 // tickSessions makes the server start ticking its sessions.
 // Sessions get ticked on an interval of 80 ticks per second.
 func (manager *Manager) tickSessions() {
-	ticker := time.NewTicker(time.Duration(float32(time.Second) / 80))
+	ticker := time.NewTicker(time.Duration(time.Second / 80))
 	for range ticker.C {
 		if !manager.Running {
 			return
 		}
 		for index, session := range manager.Sessions {
-			if time.Now().Sub(session.LastUpdate) > manager.TimeoutDuration {
-				manager.DisconnectFunction(session)
-				session.Close()
-			}
-			if session.IsClosed() {
-				delete(manager.Sessions, index)
-				return
-			}
-			go session.Tick(manager.CurrentTick)
+			manager.updateSession(session, index)
 		}
 		manager.CurrentTick++
+	}
+}
+
+// updateSession updates a session with session index.
+// The session will be ticked while it's open.
+// Sessions that have not responded for too long are timed out and
+// flagged for closing, and sessions flagged for closing will be cleaned up.
+func (manager *Manager) updateSession(session *Session, index string) {
+	session.Tick(manager.CurrentTick)
+	if time.Now().Sub(session.LastUpdate) > manager.TimeoutDuration {
+		session.FlagForClose()
+	}
+	if session.FlaggedForClose {
+		session.Close()
+		delete(manager.Sessions, index)
 	}
 }
 
