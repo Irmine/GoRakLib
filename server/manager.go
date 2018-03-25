@@ -163,14 +163,13 @@ func (manager *Manager) updateSession(session *Session, index string) {
 func (manager *Manager) processIncomingPacket() {
 	buffer := make([]byte, 2048)
 	n, addr, err := manager.Server.Read(buffer)
+	if err != nil {
+		return
+	}
 	if manager.IsIPBlocked(addr) {
 		return
 	}
 	buffer = buffer[:n]
-
-	if err != nil {
-		return
-	}
 	manager.Sessions.SessionExists(addr)
 
 	defer func() {
