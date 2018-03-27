@@ -143,7 +143,6 @@ func (session *Session) HandleACK(ack *protocol.ACK) {
 // HandleNACK handles an incoming NACK packet.
 // All packets requested in the NACK get resent to the client.
 func (session *Session) HandleNACK(nack *protocol.NAK) {
-	fmt.Println("NACK with:", nack.Packets)
 	for _, seq := range nack.Packets {
 		if !session.RecoveryQueue.IsRecoverable(seq) {
 			fmt.Println("Unrecoverable datagram:", seq, "(", nack.Packets, ")")
@@ -248,7 +247,7 @@ func (session *Session) Tick(currentTick int64) {
 	if currentTick % 400 == 0 {
 		ping := protocol.NewConnectedPing()
 		ping.PingSendTime = time.Now().Unix()
-		session.SendPacket(ping, protocol.ReliabilityUnreliable, PriorityLow)
+		session.SendPacket(ping, protocol.ReliabilityUnreliable, PriorityImmediate)
 	}
 	if currentTick % 2 == 0 {
 		session.ReceiveWindow.Tick()
