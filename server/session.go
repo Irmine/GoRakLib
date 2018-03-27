@@ -273,6 +273,9 @@ func (session *Session) SendPacket(packet protocol.IConnectedPacket, reliability
 // AddEncapsulated adds an encapsulated packet at the given priority.
 // The queue gets flushed immediately if the priority is immediate priority.
 func (queues Queues) AddEncapsulated(packet *protocol.EncapsulatedPacket, priority Priority, session *Session) {
+	if session.IsClosed() {
+		return
+	}
 	var queue *PriorityQueue
 	switch priority {
 	case PriorityImmediate:
