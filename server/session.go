@@ -46,12 +46,13 @@ type Queues struct {
 // It uses several maps and is therefore protected by a mutex.
 type Indexes struct {
 	sync.Mutex
-	splits       map[int16][]*protocol.EncapsulatedPacket
-	splitCounts  map[int16]uint
-	splitId 	 int16
-	sendSequence uint32
-	messageIndex uint32
-	orderIndex	 uint32 // TODO: Implement proper order channels and indexes.
+	splits        map[int16][]*protocol.EncapsulatedPacket
+	splitCounts   map[int16]uint
+	splitId       int16
+	sendSequence  uint32
+	messageIndex  uint32
+	orderIndex    uint32 // TODO: Implement proper order channels and indexes.
+	sequenceIndex uint32
 }
 
 // NewSession returns a new session with UDP address.
@@ -62,7 +63,7 @@ func NewSession(addr *net.UDPAddr, mtuSize int16, manager *Manager) *Session {
 		NewReceiveWindow(),
 		NewRecoveryQueue(),
 		mtuSize,
-		Indexes{sync.Mutex{}, make(map[int16][]*protocol.EncapsulatedPacket), make(map[int16]uint), 0, 0, 0, 0},
+		Indexes{sync.Mutex{}, make(map[int16][]*protocol.EncapsulatedPacket), make(map[int16]uint), 0, 0, 0, 0, 0},
 		Queues{NewPriorityQueue(1), NewPriorityQueue(256), NewPriorityQueue(256), NewPriorityQueue(256)},
 		0,
 		0,

@@ -1,7 +1,5 @@
 package protocol
 
-import "fmt"
-
 type UnconnectedPong struct {
 	*UnconnectedMessage
 	PingTime        int64
@@ -31,5 +29,4 @@ func (pong *UnconnectedPong) Decode() {
 	pong.ReadMagic()
 	l := pong.GetShort()
 	pong.PongData = string(pong.Get(int(l)))
-	fmt.Println(pong.PongData)
 }

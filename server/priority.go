@@ -90,9 +90,14 @@ func (queue *PriorityQueue) Flush(session *Session) {
 func (queue *PriorityQueue) Split(packet *protocol.EncapsulatedPacket, session *Session) []*protocol.EncapsulatedPacket {
 	mtuSize := int(session.MTUSize - 60) // We subtract 60 to account for headers.
 	var packets []*protocol.EncapsulatedPacket
-	if packet.IsSequenced() {
+
+	if packet.IsOrdered() {
 		packet.OrderIndex = session.Indexes.orderIndex
 		session.Indexes.orderIndex++
+	}else if packet.IsSequenced() {
+		packet.SequenceIndex = session.Indexes.sequenceIndex
+		session.Indexes.sequenceIndex++
+		packet.OrderIndex = session.Indexes.orderIndex
 	}
 
 	if packet.GetLength() > mtuSize {

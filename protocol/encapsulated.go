@@ -19,19 +19,20 @@ const (
 
 type EncapsulatedPacket struct {
 	*Packet
-	Reliability  byte
-	HasSplit     bool
-	Length       uint
-	MessageIndex uint32
-	OrderIndex   uint32
-	OrderChannel byte
-	SplitId      int16
-	SplitCount   uint
-	SplitIndex   uint
+	Reliability   byte
+	HasSplit      bool
+	Length        uint
+	MessageIndex  uint32
+	OrderIndex    uint32
+	OrderChannel  byte
+	SplitId       int16
+	SplitCount    uint
+	SplitIndex    uint
+	SequenceIndex uint32
 }
 
 func NewEncapsulatedPacket() *EncapsulatedPacket {
-	var packet = EncapsulatedPacket{NewPacket(0), 0, false, 0, 0, 0, 0, 0, 0, 0}
+	var packet = EncapsulatedPacket{NewPacket(0), 0, false, 0, 0, 0, 0, 0, 0, 0, 0}
 	return &packet
 }
 
@@ -44,7 +45,7 @@ func (packet *EncapsulatedPacket) GetFromBinary(stream *Datagram) (*Encapsulated
 		return packet, errors.New("no bytes left to read")
 	}
 
-	packet.Length = uint(stream.GetUnsignedShort() / 8)
+	packet.Length = uint(stream.GetShort() / 8)
 
 	if packet.Length == 0 {
 		return packet, errors.New("null encapsulated packet")
@@ -55,6 +56,10 @@ func (packet *EncapsulatedPacket) GetFromBinary(stream *Datagram) (*Encapsulated
 	}
 
 	if packet.IsSequenced() {
+		packet.SequenceIndex = packet.GetLittleTriad()
+	}
+
+	if packet.IsSequencedOrOrdered() {
 		packet.OrderIndex = stream.GetLittleTriad()
 		packet.OrderChannel = stream.GetByte()
 	}
@@ -86,7 +91,12 @@ func (packet *EncapsulatedPacket) Encode() {
 	if packet.IsReliable() {
 		packet.PutLittleTriad(packet.MessageIndex)
 	}
+
 	if packet.IsSequenced() {
+		packet.PutLittleTriad(packet.SequenceIndex)
+	}
+
+	if packet.IsSequencedOrOrdered() {
 		packet.PutLittleTriad(packet.OrderIndex)
 		packet.PutByte(packet.OrderChannel)
 	}
@@ -117,6 +127,26 @@ func (packet *EncapsulatedPacket) IsReliable() bool {
 }
 
 func (packet *EncapsulatedPacket) IsSequenced() bool {
+	switch packet.Reliability {
+	case ReliabilityUnreliableSequenced:
+		return true
+	case ReliabilityReliableSequenced:
+		return true
+	}
+	return false
+}
+
+func (packet *EncapsulatedPacket) IsOrdered() bool {
+	switch packet.Reliability {
+	case ReliabilityReliableOrdered:
+		return true
+	case ReliabilityReliableOrderedWithAck:
+		return true
+	}
+	return false
+}
+
+func (packet *EncapsulatedPacket) IsSequencedOrOrdered() bool {
 	switch packet.Reliability {
 	case ReliabilityUnreliableSequenced:
 		return true
